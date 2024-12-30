@@ -371,8 +371,10 @@ public:
 
     BinaryOpSubType SubType() {return m_SubType;}
 
-    void SetLhs(ASTNode* lhs) {LhsNode = lhs;}
-    void SetRhs(ASTNode* rhs) {RhsNode = rhs;}
+    void SetLhs(ASTNode* lhs) override {LhsNode = lhs;}
+    void SetRhs(ASTNode* rhs) override {RhsNode = rhs;}
+    ASTNode* Lhs() override {return LhsNode;}
+    ASTNode* Rhs() override {return RhsNode;}
 
 private:
     BinaryOpNode() = default;
