@@ -360,6 +360,15 @@ public:
 
     void SetSubType(BinaryOpSubType OpType) {m_SubType = OpType;}
 
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["raw"] = Raw();
+        jsonObj["subType"] = StringifyBinaryOpSubType(m_SubType);
+        jsonObj["lhs"] = LhsNode->toJson();
+        jsonObj["rhs"] = RhsNode->toJson();
+        return jsonObj;
+    }
+
     BinaryOpSubType SubType() {return m_SubType;}
 
     void SetLhs(ASTNode* lhs) {LhsNode = lhs;}
