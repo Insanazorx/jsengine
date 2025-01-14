@@ -2,6 +2,8 @@
 #define PARSER_H
 #include <vector>
 #include <optional>
+#include <type_traits>
+#include <functional>
 
 #include "LexerTypes.h"
 #include "AST.h"
@@ -14,7 +16,6 @@ for (auto token : tokens) \
     DEBUG( GREEN_TEXT <<"PARSER : " << FUNCTION_NAME() << RESET_TEXT << " Type of token: " << Lexer::StringifyTokenType(token));
 
 namespace JSLib {
-
     class Statement;
     class ParserContext;
     class IfStatement;
@@ -24,8 +25,17 @@ namespace JSLib {
     class ProgramStatement;
     class NodeBranchInfo;
 
+    template <typename T>
+    concept CallableReturnsVoid = std::invocable<T> && std::same_as<std::invoke_result_t<T>, void>;
+    template<typename T>
+    concept CallableReturnsInt = std::invocable<T,TokenType> && std::same_as<std::invoke_result_t<T,TokenType>, int>;
+
 class Parser {
 friend class ParserContext;
+    friend class Statement;
+    friend class IfStatement;
+    friend class ForStatement;
+    friend class ImmediateStatement;
 private:
 
     Parser(const Parser&) = delete;
@@ -55,30 +65,34 @@ public:
         }
         return m_Instance;
     }
-    ASTNode* Analyze() {return EnterAnalyzerLoop();}
-
+    ASTNode* ParseInGlobalContextFromTokens() {return EnterAnalyzerLoop();}
+    ASTNode* ParseFunction() {}
     ASTNode* GenerateAST(NodeBranchInfo* NodeInfo);
     ASTNode* GeneratePartialAST(NodeBranchInfo* NodeInfo);
 
     ASTNode* GetTopLevelASTNode() {return m_TopLevelASTNode;};
-
+private:
 
     ASTNode* RecognizeStatementOrRedirectNode(std::optional<std::vector<Token>>& tokens, ParserContext* context);
-private:
+
     ASTNode* EnterAnalyzerLoop() {return RecognizeStatementOrRedirectNode(*new std::optional<vector<Token>>{nullopt} ,m_context);}
 
     ASTNode* StatementParser(Statement* statement, ParserContext* context);
 
     IfStatement* CreateNewIfStatement();
-    ForStatement* CreateNewForStatement();
+    WhileStatement* CreateNewWhileStatement();
+
     BinaryOpStatement* CreateNewBinaryOpStatement();
     //WhileStatement* CreateNewWhileStatement() {};
 
-    std::optional<std::vector<Token>> ConsumeSpecificSpan(TokenType FirstToken, TokenType LastToken);
-    std::optional<std::vector<Token>> ConsumeStatement(StatementType statementType);
+
+    template <CallableReturnsInt T, CallableReturnsVoid F>
+    std::optional<std::vector<Token>> ConsumeSpecificSpan(F &&StartingCondition, T &&PermanentCondition);
+
     Token Consume();
     Token GetPreviousTokenWithoutGoingBack();
 
+    static void SanitizeEmptyTokens(std::vector<Token>& TokensToSanitize);
     TokenType PeekFront(int Distance);
     TokenType PeekHind(int Distance);
     Token DebugPeek(int Distance); //debug
@@ -106,6 +120,7 @@ public:
         TokenCounter() = default;
 
     protected:
+        Stack<TokenType> BracketOrBraceStack;
         std::vector<Token> m_TokenList;
         Stack<Token*> m_StatementTracerStack;
         std::vector<std::vector<Token>> m_StatementTokenLists;
@@ -118,6 +133,18 @@ public:
 
         virtual TokenCounterType Type(){return TokenCounterType::NOT_SPECIFIED;}
         void SetTokens(std::vector<Token>& tokens) {m_TokenList = tokens;}
+
+        int FindFirstIndexOfToken(TokenType type) {
+            for (int i = 0; i < m_TokenList.size(); i++) {
+                if (m_TokenList[m_CurrentIndex + i].Type == type) {
+                     return m_CurrentIndex + i;
+                }
+            }
+        }
+        TokenType PeekSpecific(int Distance) {
+            return m_TokenList[m_CurrentIndex + Distance].Type;
+        }
+
         std::vector<std::vector<Token>>& GetStatementTokenLists() {return m_StatementTokenLists;}
         int GetCurrentIndex() {return m_CurrentIndex;}
         Token* GetCurrentTokenPtr() {
@@ -141,7 +168,7 @@ public:
         Token GetPrevTokenWithoutGoingBack() {
             return m_TokenList[m_CurrentIndex-1];
         }
-        Token* Peek(int Distance) {
+        Token* Peek(const int Distance) {
 
             return &m_TokenList[m_CurrentIndex + Distance];
         }
@@ -149,6 +176,35 @@ public:
             while (m_CurrentTokenPtr->Type != TokenType::END_OF_STATEMENT)
                 m_CurrentTokenPtr = &Next();
             return m_CurrentTokenPtr;
+        }
+
+        void PushToBracketOrBraceStack(const TokenType type) {
+            BracketOrBraceStack.Push(type);
+        }
+
+        bool CheckIfRightBracketOrBraceProperAndPairThem(const TokenType tokenType) {
+            if (BracketOrBraceStack.IsEmpty()) {
+                return false;
+            }
+            DEBUG(LOGGER_BANNER(TOKEN_COUNTER)<<"Stack Size: " << BracketOrBraceStack.Size());
+            if (BracketOrBraceStack.Peek() == TokenType::L_BRACE && tokenType == TokenType::R_BRACE) {
+
+                BracketOrBraceStack.Pop();
+
+                if (BracketOrBraceStack.IsEmpty()) {
+                    return true;
+                }
+            }
+            if (BracketOrBraceStack.Peek() == TokenType::L_PARENTHESES && tokenType == TokenType::R_PARENTHESES) {
+
+                BracketOrBraceStack.Pop();
+
+                if (BracketOrBraceStack.IsEmpty()) {
+                    return true;
+                }
+
+            }
+            return false;
         }
 
     };

@@ -63,6 +63,9 @@ namespace JSLib {
             TokenTypeMap["continue"] = TokenType::CONTINUE;
             TokenTypeMap["extends"] = TokenType::EXTENDS;
             TokenTypeMap["return"] = TokenType::RETURN;
+            TokenTypeMap["super"] = TokenType::SUPER;
+            TokenTypeMap["switch"] = TokenType::SWITCH;
+            TokenTypeMap["this"] = TokenType::THIS;
             TokenTypeMap["function"] = TokenType::FUNCTION;
             TokenTypeMap["var"] = TokenType::VAR;
             TokenTypeMap["let"] = TokenType::LET;
@@ -71,6 +74,11 @@ namespace JSLib {
             TokenTypeMap["for"] = TokenType::FOR;
             TokenTypeMap["while"] = TokenType::WHILE;
             TokenTypeMap["class"] = TokenType::CLASS;
+            TokenTypeMap["await"] = TokenType::AWAIT;
+            TokenTypeMap["async"] = TokenType::ASYNC;
+            TokenTypeMap["function*"] = TokenType::GENERATOR_FUNCTION;
+            TokenTypeMap["of"] = TokenType::OF;
+            TokenTypeMap["in"] = TokenType::IN;
             TokenTypeMap["("] = TokenType::L_PARENTHESES;
             TokenTypeMap[")"] = TokenType::R_PARENTHESES;
             TokenTypeMap["{"] = TokenType::L_BRACE;

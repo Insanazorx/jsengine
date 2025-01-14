@@ -1,9 +1,9 @@
 
 #pragma once
 #include <iostream>
-#include <cstdlib>
 #include <csignal>
-#include <typeinfo>
+#include <string>
+#include <curl/curl.h>
 
 #define BRK() raise(SIGTRAP)
 
@@ -47,20 +47,7 @@ isOnceVerified = true;\
 
 #define LOGGER_BANNER(x) GREEN_TEXT<< #x <<" " << FUNCTION_NAME() << " " << RESET_TEXT
 
-class Debugger {
-public:
-    // Genel log fonksiyonu
-    template <typename T>
-    static void Log(const std::string& varName, const T& value) {
-        DEBUG(LOGGER_BANNER([[DEBUGGER]]) << varName << " = " << value);
-    }
 
-    // Sınıf üyesi değişkenlerini loglayan fonksiyon
-    template <typename T>
-    static void Inspect(const T& obj) {
-        obj.DebugInfo(); // Her sınıf DebugInfo fonksiyonunu sağlamalı
-    }
-};
 
 // Macro ile getter ve DebugInfo üretimi
 #define DEBUGGER_FRIEND_AND_GETTERS(...)                          \
@@ -70,5 +57,51 @@ public:
         (void)std::initializer_list<int>{                         \
         (Debugger::Log(# __VA_ARGS__, this->__VA_ARGS__), 0)...}; \
     }
+
+namespace Debug {
+    inline void curlData(std::string&& data) {
+
+        CURL* curl = curl_easy_init();
+        if (curl) {
+
+            std::string url = "http://localhost:5000/nodejson";
+
+            curl_slist* headers = nullptr;
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+            CURLcode res = curl_easy_perform(curl);
+
+            if (res != CURLE_OK) {
+                std::cerr << "cURL Hatası: " << curl_easy_strerror(res) << std::endl;
+            } else {
+                std::cout << "JSON başarıyla gönderildi." << std::endl;
+            }
+
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+        } else {
+            std::cerr<<"curl pointer nullptr" << std::endl;
+        }
+    }
+
+    class Debugger {
+    public:
+        // Genel log fonksiyonu
+        template <typename T>
+        static void Log(const std::string& varName, const T& value) {
+            DEBUG(LOGGER_BANNER([[DEBUGGER]]) << varName << " = " << value);
+        }
+
+        // Sınıf üyesi değişkenlerini loglayan fonksiyon
+        template <typename T>
+        static void Inspect(const T& obj) {
+            obj.DebugInfo(); // Her sınıf DebugInfo fonksiyonunu sağlamalı
+        }
+    };
+}
 
 

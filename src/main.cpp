@@ -6,7 +6,7 @@
 using namespace JSLib;
 
 int main (void) {
-    std::string expr("if ( a * b & c ) { return 1 + 2 + d ; }");
+    std::string expr("if ( d + ( a - b ) * c ) { return 1 + 2 + 3 ; }");
     Lexer lexer(expr);
     lexer.Scan();
     for (auto token : lexer.Tokens())
@@ -15,7 +15,7 @@ int main (void) {
     auto& tokens = lexer.Tokens();
     auto ctx = ParserContext::Create(Parser::Instance());
     Parser::Initialize(tokens, ctx);
-    Parser::Instance()->Analyze();
+    Parser::Instance()->ParseInGlobalContextFromTokens();
 
 
     return 0;

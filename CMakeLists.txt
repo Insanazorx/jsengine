@@ -4,6 +4,9 @@ project(js)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -g")
 
+find_package(nlohmann_json 3.11.3 REQUIRED)
+find_package(CURL REQUIRED)
+
 add_executable(js src/main.cpp
         src/AST.h
         src/AST.cpp
@@ -17,3 +20,6 @@ add_executable(js src/main.cpp
         src/Context.h
         src/Util.h
         src/Visitor.h)
+
+target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(js PRIVATE CURL::libcurl)

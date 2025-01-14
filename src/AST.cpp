@@ -24,7 +24,7 @@ namespace JSLib {
         if (AlternateTokens)
             AlternateTokens.value().push_back(EosToken);
 
-        bool AnalyzedThisDepth = false;
+        static bool AnalyzedThisDepth = false;
         ASTNode* TestNode = nullptr;
         ASTNode* ConsequentNode = nullptr;
         ASTNode* AlternateNode = nullptr;
@@ -85,8 +85,8 @@ namespace JSLib {
 
         ASTNode* InitialConditionNode;
         ASTNode* TestNode;
-        DummyNode* IterationNode;
-        DummyNode* ConsequentNode;
+        ASTNode* IterationNode;
+        ASTNode* ConsequentNode;
 
 
         bool AnalyzedThisDepth = false;
@@ -128,60 +128,10 @@ namespace JSLib {
         return NewInfo;
     }
 
-
     ASTNode* BinaryOpStatement::GenerateASTImmediate(ParserContext* context) {
-
-        context->PushBinaryOpGenerateImmediateASTCallStack(new std::string(FUNCTION_NAME()));
 
         auto InitialNode = ASTNode::Create();
         Parser::Instance()->Builder()->immBuilder()->SetCurrentNode(InitialNode);
-
-
-        VERIFY(Parser::Instance()
-            ->Builder()
-            ->immBuilder()
-            ->ParseInnerParentheses(
-                this->GetTokenChain(),
-                nullptr,
-                context)
-            ,"ParseInnerParentheses returned false in depth " << context->GetDepth() );
-
-        context->ResetDepth();
-        context->PopBinaryOpGenerateImmediateASTcallStack();
-
-        return {};
-    }
-
-
-    void ASTBuilder::ImmediateBuilder::GoToNumericChild() {
-        auto parent = CurrentNode();
-        for (auto child : CurrentNode()->Children()) {
-            if (isNumeric(child->Raw()))
-                SetCurrentNode(child);
-        }
-        VERIFY(parent != CurrentNode(), "Could not get to numeric child!");
-    }
-
-    std::vector<Token>& ASTBuilder::ImmediateBuilder::EmptyOneExprFromStack() {
-        auto retValue = *new std::vector<Token>();
-        while (TokenStack().Peek().Type == TokenType::L_PARENTHESES) {
-            if (TokenStack().Peek().Type == TokenType::R_PARENTHESES) {
-                TokenStack().Pop();
-                continue;
-            }
-            retValue.push_back(TokenStack().Pop());
-        }
-        return retValue;
-    }
-
-    bool ASTBuilder::ImmediateBuilder::ParseInnerParentheses(std::vector<Token>& TokenChain,CacheChain* CurrentChain, ParserContext* context) {
-
-        context->PushBinaryOpGenerateImmediateASTCallStack(new std::string(FUNCTION_NAME()));
-        context->IncDepth();
-
-        auto GetPrecedence = [&](BinaryOpSubType subType) -> int {
-            return static_cast<int>(subType);
-        };
 
         std::unordered_map<std::string, BinaryOpSubType> OperationTypeMap;
         OperationTypeMap["+"] = BinaryOpSubType::ADD;
@@ -194,136 +144,209 @@ namespace JSLib {
         OperationTypeMap["&"] = BinaryOpSubType::BITWISE_AND;
         OperationTypeMap[">>"] = BinaryOpSubType::SHIFT_RIGHT;
         OperationTypeMap["<<"] = BinaryOpSubType::SHIFT_LEFT;
+        OperationTypeMap["=="] = BinaryOpSubType::IS_EQUAL;
+        OperationTypeMap["!="] = BinaryOpSubType::IS_NOT_EQUAL;
+        OperationTypeMap["==="] = BinaryOpSubType::IS_STRICTLY_EQUAL;
+        OperationTypeMap["!=="] = BinaryOpSubType::IS_NOT_STRICTLY_EQUAL;
+        OperationTypeMap[">"] = BinaryOpSubType::GREATER_THAN;
+        OperationTypeMap["<"] = BinaryOpSubType::LESS_THAN;
+        OperationTypeMap[">="] = BinaryOpSubType::GREATER_OR_EQUAL;
+        OperationTypeMap["<="] = BinaryOpSubType::LESS_OR_EQUAL;
+        OperationTypeMap["("] = BinaryOpSubType::L_PARENTHESES;
+        OperationTypeMap[")"] = BinaryOpSubType::R_PARENTHESES;
 
 
-    VERIFY_ONCE(!CurrentChain, "CurrentChain should be empty first!");
-    if (!CurrentChain) CurrentChain = tlChain();
+        auto& InfixTokens = this->GetTokenChain();
 
-        if (context->isBinaryOpExprParsingStartedOnce()) {
-            CurrentChain->CurrentTLNodeOfBranch = ASTNode::Create();
-            CurrentChain->CurrentTLNodeOfBranch->SetValue("FIRST NODE");
-            SetCurrentNode(CurrentChain->CurrentTLNodeOfBranch->Children()[0]);
+        auto PostfixTokens =Parser::Instance()->Builder()->immBuilder()->ConvertInfixToPostfix(InfixTokens,context, OperationTypeMap);
+
+        DEBUG("Press key to print Postfix Tokens...");
+        std::cout<<"-------------------" << "BinaryOpStatement::GenerateASTImmediate" << "-------------------"<< std::endl;
+        std::cout << "Postfix Tokens: ";
+        for (auto& token : *PostfixTokens) {
+            std::cout << token.Lexeme<< " ";
         }
+        std::cout << std::endl;
+        std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
 
-    for (auto token : TokenChain) {
-        if (token.Type == TokenType::L_PARENTHESES) {
+        auto ASTBranch = Parser::Instance()->Builder()->immBuilder()->GenerateASTFromPostfix(PostfixTokens, context, OperationTypeMap);
 
-            TokenStack().Push(token);
+        DEBUG ("Press key to print AST...");
+        std::cout <<"-------------------" << "BinaryOpStatement::GenerateASTImmediate" << "-------------------"<< std::endl;
+        std::cout << "ASTBranch: ";
+        const auto dump = ASTBranch->toJson().dump(4);
+        std::cout << dump << std::endl;
+        std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
 
-            continue;
-        }
 
-        if (token.Type == TokenType::R_PARENTHESES) {
+        return ASTBranch;
+    }
 
-            std::vector<Token> InnerTokens;
+    std::shared_ptr<std::vector<Token>> ASTBuilder::ImmediateBuilder::ConvertInfixToPostfix(
+        const std::vector<Token> &TokensToConvert, ParserContext *context,
+        std::unordered_map<std::string, BinaryOpSubType>& OpTypeMap) {
 
-            if (isStackEmpty())
-                return false;
+        std::shared_ptr<std::vector<Token>> PostfixTokens = std::make_shared<std::vector<Token>>();
 
-            CurrentChain->AllocInnerChain();
+        for (auto token : TokensToConvert) {
 
-            if (hasRemainedOneExprInStack()) {
-                InnerTokens = EmptyOneExprFromStack();
-
-                if (ParseInnerParentheses(InnerTokens,CurrentChain->InnerChain, context))
-                    LinkCurrentTLNodeOfBranchToMainBranchNode();
-                else return false;
-
-            } else {
-                InnerTokens = EmptyOneExprFromStack();
-
-                if (ParseInnerParentheses(InnerTokens,CurrentChain->InnerChain,context))
-                    LinkInnerParenthesesNodeToOuterOne(CurrentChain);
-                else return false;
+            if (token.Type == TokenType::NUMERIC || token.Type == TokenType::IDENTIFIER) {
+                PostfixTokens->push_back(token);
+                continue;
             }
 
-            continue;
-        }
+            if (token.Type == TokenType::BINARY_OP) {
 
-        auto OpTypeIterator = OperationTypeMap.find(token.Lexeme);
+                if (OperatorStack().IsEmpty()) {
+                    OperatorStack().Push(token);
+                    continue;
+                }
 
+                auto BinaryOpIteratorType = OpTypeMap.find(token.Lexeme);
 
-        if (!isStackEmpty()) {
-            if (OpTypeIterator != OperationTypeMap.end()) {
-                auto OpNode = BinaryOpNode::Create();
-                OpNode->SetSubType(OpTypeIterator->second);
-                PushToNodeStack(OpNode);
-            } else {
-                auto NumericNode = ASTNode::Create();
-                NumericNode->SetValue(token.Lexeme);
-                PushToNodeStack(NumericNode);
+                if (BinaryOpIteratorType == OpTypeMap.end()) {
+                    DEBUG("BinaryOpIteratorType could not be found in OpTypeMap");
+                    VERIFY_NOT_REACHED();
+                }
+
+                auto TopOfStackOpTypeIterator = OpTypeMap.find(OperatorStack().Peek().Lexeme);
+
+                if (TopOfStackOpTypeIterator == OpTypeMap.end()) {
+                    DEBUG("TopOfStackOpTypeIterator could not be found in OpTypeMap");
+                    VERIFY_NOT_REACHED();
+                }
+
+                BinaryOpSubType OpType = BinaryOpIteratorType->second;
+                BinaryOpSubType TopOfStackOpType = TopOfStackOpTypeIterator->second;
+
+                if (OperatorStack().Peek().Type == TokenType::BINARY_OP) {
+                    if (GetPrecedence(OpType) > GetPrecedence(TopOfStackOpType)) {
+                        OperatorStack().Push(token);
+                        continue;
+                    }
+                    PostfixTokens->push_back(OperatorStack().Pop());
+                    OperatorStack().Push(token);
+                    continue;
+                }
+                OperatorStack().Push(token);
+                continue;
             }
-            continue;
+            if (token.Type == TokenType::L_PARENTHESES) {
+                OperatorStack().Push(token);
+                continue;
+            }
+
+            if (token.Type == TokenType::R_PARENTHESES) {
+                while (OperatorStack().Peek().Type != TokenType::L_PARENTHESES) {
+                    PostfixTokens->push_back(OperatorStack().Pop());
+                }
+                OperatorStack().Pop(); //pop the left parentheses
+                continue;
+            }
+
         }
+        while (!OperatorStack().IsEmpty()) {
+            PostfixTokens->push_back(OperatorStack().Pop());
+        };
+        return PostfixTokens;
+    }
+    ASTNode* ASTBuilder::ImmediateBuilder::GenerateASTFromPostfix(std::shared_ptr<std::vector<Token>> PostfixToASTTokens,
+                                                                  ParserContext* context,
+                                                                  std::unordered_map<std::string,BinaryOpSubType>& OpTypeMap) {
+        bool IsOnceActivated = false;
+        int TokenIndex = 0;
+        for (auto& token : *PostfixToASTTokens) {
 
-        if (OpTypeIterator != OperationTypeMap.end()) {
+            DEBUG(LOGGER_BANNER(ImmediateBuilder)<< "token: " << token.Lexeme);
 
-            auto NewNode = BinaryOpNode::Create();
-            auto OpType = OpTypeIterator->second;
-            NewNode->SetSubType(OpType);
+            if (token.Type == TokenType::NUMERIC || token.Type == TokenType::IDENTIFIER) {
+                TokenIndex++;
+                continue;
+            }
 
-            GoToNumericChild();
+            if (token.Type == TokenType::BINARY_OP) {
 
-            VERIFY(CurrentNode()->hasParent(),"There must be parent node!");
-            auto CurrentParent = dynamic_cast<BinaryOpNode*>(CurrentNode()->Parent());
-            VERIFY(CurrentParent,"Parent node could not have been casted!");
+                auto it = OpTypeMap.find(token.Lexeme);
+                if (it == OpTypeMap.end()) {
+                    DEBUG("Could not find the operator in OpTypeMap");
+                    VERIFY_NOT_REACHED();
+                }
+                auto OpType = it->second;
 
-            auto CurrentParentOpType = CurrentParent->SubType();
+                auto NewNode = BinaryOpNode::Create();
+                NewNode->SetSubType(OpType);
+                NewNode->SetValue(token.Lexeme);
 
-            if (GetPrecedence(OpType) > GetPrecedence(CurrentParentOpType)) {
-                PushToNodeStack(CurrentNode());
-                SetCurrentNode(NewNode);
-                AddChild(PopFromNodeStack());
-            }else {
-                GoTopLevelNodeOfCurrentBranch();
+                token.Analyzed = true;
+
+                if (!IsOnceActivated) {
+                    NumericNode* LhsNodeIfNumeric;
+                    NumericNode* RhsNodeIfNumeric;
+                    VariableNode* LhsNodeIfVariable;
+                    VariableNode* RhsNodeIfVariable;
+
+                    SetCurrentNode(NewNode);
+                    auto& RhsToken = PostfixToASTTokens->at(TokenIndex-1);
+                    auto& LhsToken = PostfixToASTTokens->at(TokenIndex-2);
+                    if (RhsToken.Type == TokenType::NUMERIC) {
+                        RhsNodeIfNumeric = NumericNode::Create();
+                        RhsNodeIfNumeric->SetValue(RhsToken.Lexeme);
+                        RhsNodeIfNumeric->SetNumericValueFromRaw();
+                    } else if (RhsToken.Type == TokenType::IDENTIFIER) {
+                        RhsNodeIfVariable = VariableNode::Create();
+                        RhsNodeIfVariable->SetValue(RhsToken.Lexeme);
+                    }
+                    RhsToken.Analyzed = true;
+
+                    if (LhsToken.Type == TokenType::NUMERIC) {
+                        LhsNode = NumericNode::Create();
+                        LhsNode->SetValue(LhsToken.Lexeme);
+                        LhsNode->SetNumericValueFromRaw();
+                    } else if (LhsToken.Type == TokenType::IDENTIFIER) {
+                        LhsNode = VariableNode::Create();
+                        LhsNode->SetValue(LhsToken.Lexeme);
+                    }
+                    LhsToken.Analyzed = true;
+
+                    VERIFY(LhsNode,"lhs node could not get created");
+                    VERIFY(RhsNode,"rhs node could not get created");
+
+                    AddLhs(LhsNode);
+                    AddRhs(RhsNode);
+
+                    IsOnceActivated = true;
+                    continue;
+                }
+
                 AddParent(NewNode);
+                GoTopLevelNodeOfCurrentBranch();
+
+                int i = 0;
+                while (TokenIndex != i && PostfixToASTTokens->at(TokenIndex - i++).Analyzed);
+
+                if (PostfixToASTTokens->at(TokenIndex - i).Type == TokenType::NUMERIC) {
+                    auto Node = NumericNode::Create();
+                    Node->SetValue(PostfixToASTTokens->at(TokenIndex - i).Lexeme);
+                    Node->SetNumericValueFromRaw();
+                    NewNode->SetRhs(Node);
+                } else if (PostfixToASTTokens->at(TokenIndex - i).Type == TokenType::IDENTIFIER) {
+                    auto Node = VariableNode::Create();
+                    Node->SetValue(PostfixToASTTokens->at(TokenIndex - i).Lexeme);
+                    NewNode->SetRhs(Node);
+                }
+
+
+                TokenIndex++;
+                continue;
             }
-            }
-
-        auto NumericNode = ASTNode::Create();
-        NumericNode->SetValue(token.Lexeme);
-
-        AddChild(NumericNode);
-
-
-
+        }
     }
-
-    context->PopBinaryOpGenerateImmediateASTcallStack();
-        return true;
-    }
-
-
-    void ASTBuilder::ImmediateBuilder::LinkInnerParenthesesNodeToOuterOne(CacheChain* CurrentChain) {
-        auto TLNodeOfInnerParentheses = CurrentChain->CurrentTLNodeOfBranch;
-
-        VERIFY(CurrentChain->UpperChain,"UpperChain is nullptr");
-        auto TLNodeOfOuterParentheses = CurrentChain->UpperChain->CurrentTLNodeOfBranch;
-
-        this->NodeStack().Push(CurrentNode());
-        this->SetCurrentNode(TLNodeOfOuterParentheses);
-        this->AddChild(TLNodeOfInnerParentheses);
-        this->SetCurrentNode(NodeStack().Pop());
-    }
-    void ASTBuilder::ImmediateBuilder::LinkCurrentTLNodeOfBranchToMainBranchNode() {
-        m_LastUsedMainBranchNode->Children().push_back(m_TopLevelCacheChain.CurrentTLNodeOfBranch);
-    }
-    bool ASTBuilder::ImmediateBuilder::hasRemainedOneExprInStack() {
-        int ParenthesesCount = 0;
-        for (auto token: TokenStack().asVector())
-            if (token.Type == TokenType::L_PARENTHESES)
-                ParenthesesCount++;
-        VERIFY(ParenthesesCount > 0 ,"No Parentheses found in Stack");
-        return ParenthesesCount > 1 ;
-    }
-
-
-    bool ASTBuilder::ASTSpecializerVisitor::CheckIfStackContainsElement() {};
-    bool ASTBuilder::ASTSpecializerVisitor::CheckIfMoreThanOneChild() {};
-    bool ASTBuilder::ASTSpecializerVisitor::ReturnToLastStackElement() {};
-    bool ASTBuilder::ASTSpecializerVisitor::SwitchToOtherChild() {};
-    void ASTBuilder::ASTSpecializerVisitor::SwapNode(ASTNode* TreeNode, ASTNode* StrayNode) {};
-    void ASTBuilder::ASTSpecializerVisitor::PlaceNodeAndIterateToChild(ASTNode* NodeToPlace) {};
+    bool ASTBuilder::SpecializerVisitor::CheckIfStackContainsElement() {};
+    bool ASTBuilder::SpecializerVisitor::CheckIfMoreThanOneChild() {};
+    bool ASTBuilder::SpecializerVisitor::ReturnToLastStackElement() {};
+    bool ASTBuilder::SpecializerVisitor::SwitchToOtherChild() {};
+    void ASTBuilder::SpecializerVisitor::SwapNode(ASTNode* TreeNode, ASTNode* StrayNode) {};
+    void ASTBuilder::SpecializerVisitor::PlaceNodeAndIterateToChild(ASTNode* NodeToPlace) {};
 
     ASTNode* ASTBuilder::GenerateScaffoldingByShape() {};
     void ASTBuilder::SetBuilderParametersByLookingShape() {};

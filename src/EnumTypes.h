@@ -1,20 +1,128 @@
 
 #pragma once
+#include <string>
+
+#include "debug.h"
+
 namespace JSLib {
     enum class StatementType{
-        PROGRAM, IF_STATEMENT, FOR_STATEMENT, WHILE_STATEMENT, SWITCH_CASE_STATEMENT,IMMEDIATE_STATEMENT,BINARY_OP_STATEMENT,VARIABLE_STATEMENT, UNARY_OP_STATEMENT, ASSIGNMENT_STATEMENT,
-        FUNCTION_STATEMENT, CLASS_STATEMENT, VARIABLE_DECLARATION_STATEMENT, BOOL_STATEMENT, ANY_OF_STATEMENT_TYPES, INVALID_STATEMENT
+        PROGRAM, IF_STATEMENT, FOR_STATEMENT,
+        WHILE_STATEMENT, SWITCH_CASE_STATEMENT,IMMEDIATE_STATEMENT,
+        BINARY_OP_STATEMENT,VARIABLE_STATEMENT, UNARY_OP_STATEMENT,
+        ASSIGNMENT_STATEMENT,FUNCTION_STATEMENT, CLASS_STATEMENT,
+        VARIABLE_DECLARATION_STATEMENT, BOOL_STATEMENT,
+        ANY_OF_STATEMENT_TYPES,INVALID_STATEMENT
     };
     enum class BinaryOpSubType {
-        POW= 9,
-        MUL=8,DIV=8,MOD=8,
-        ADD=7,SUB=7,
-        SHIFT_LEFT=6,SHIFT_RIGHT=6,
-        IN= 5,INSTANCEOF = 5,GREATER_THAN = 5,LESS_THAN =5 ,GREATER_OR_EQUAL =5 ,LESS_OR_EQUAL=5,
-        IS_EQUAL=4, IS_NOT_EQUAL=4, IS_STRICTLY_EQUAL=4, IS_NOT_STRICTLY_EQUAL=4,
-        BITWISE_OR = 3, BITWISE_XOR = 3, BITWISE_AND = 3,
-        LOGICAL_OR = 2, LOGICAL_AND = 2
+        POW,
+        MUL,DIV,MOD,
+        ADD,SUB,
+        SHIFT_LEFT,SHIFT_RIGHT,
+        IN,INSTANCEOF ,GREATER_THAN,LESS_THAN ,GREATER_OR_EQUAL ,LESS_OR_EQUAL,
+        IS_EQUAL, IS_NOT_EQUAL, IS_STRICTLY_EQUAL, IS_NOT_STRICTLY_EQUAL,
+        BITWISE_OR , BITWISE_XOR, BITWISE_AND,
+        LOGICAL_OR, LOGICAL_AND,
+        L_PARENTHESES, R_PARENTHESES
     };
+
+    inline std::string StringifyBinaryOpSubType(BinaryOpSubType type) {
+        switch (type) {
+            case BinaryOpSubType::POW:
+                return "POW";
+            case BinaryOpSubType::MUL:
+                return "MUL";
+            case BinaryOpSubType::DIV:
+                return "DIV";
+            case BinaryOpSubType::MOD:
+                return "MOD";
+            case BinaryOpSubType::ADD:
+                return "ADD";
+            case BinaryOpSubType::SUB:
+                return "SUB";
+            case BinaryOpSubType::SHIFT_LEFT:
+                return "SHIFT_LEFT";
+            case BinaryOpSubType::SHIFT_RIGHT:
+                return "SHIFT_RIGHT";
+            case BinaryOpSubType::IN:
+                return "IN";
+            case BinaryOpSubType::INSTANCEOF:
+                return "INSTANCEOF";
+            case BinaryOpSubType::GREATER_THAN:
+                return "GREATER_THAN";
+            case BinaryOpSubType::LESS_THAN:
+                return "LESS_THAN";
+            case BinaryOpSubType::GREATER_OR_EQUAL:
+                return "GREATER_OR_EQUAL";
+            case BinaryOpSubType::LESS_OR_EQUAL:
+                return "LESS_OR_EQUAL";
+            case BinaryOpSubType::IS_EQUAL:
+                return "IS_EQUAL";
+            case BinaryOpSubType::IS_NOT_EQUAL:
+                return "IS_NOT_EQUAL";
+            case BinaryOpSubType::IS_STRICTLY_EQUAL:
+                return "IS_STRICTLY_EQUAL";
+            case BinaryOpSubType::IS_NOT_STRICTLY_EQUAL:
+                return "IS_NOT_STRICTLY_EQUAL";
+            case BinaryOpSubType::BITWISE_OR:
+                return "BITWISE_OR";
+            case BinaryOpSubType::BITWISE_XOR:
+                return "BITWISE_XOR";
+            case BinaryOpSubType::BITWISE_AND:
+                return "BITWISE_AND";
+            case BinaryOpSubType::LOGICAL_OR:
+                return "LOGICAL_OR";
+            case BinaryOpSubType::LOGICAL_AND:
+                return "LOGICAL_AND";
+            case BinaryOpSubType::L_PARENTHESES:
+                return "L_PARENTHESES";
+            case BinaryOpSubType::R_PARENTHESES:
+                return "R_PARENTHESES";
+            default:
+                VERIFY_NOT_REACHED();
+        }
+    }
+
+    inline int GetPrecedence (BinaryOpSubType type) {
+        switch (type) {
+            case BinaryOpSubType::POW:
+                return 9;
+            case BinaryOpSubType::MUL:
+            case BinaryOpSubType::DIV:
+            case BinaryOpSubType::MOD:
+                return 8;
+            case BinaryOpSubType::ADD:
+            case BinaryOpSubType::SUB:
+                return 7;
+            case BinaryOpSubType::SHIFT_LEFT:
+            case BinaryOpSubType::SHIFT_RIGHT:
+                return 6;
+            case BinaryOpSubType::IN:
+                return 5;
+            case BinaryOpSubType::INSTANCEOF:
+            case BinaryOpSubType::GREATER_THAN:
+            case BinaryOpSubType::LESS_THAN:
+            case BinaryOpSubType::GREATER_OR_EQUAL:
+            case BinaryOpSubType::LESS_OR_EQUAL:
+                return 5;
+            case BinaryOpSubType::IS_EQUAL:
+            case BinaryOpSubType::IS_NOT_EQUAL:
+            case BinaryOpSubType::IS_STRICTLY_EQUAL:
+            case BinaryOpSubType::IS_NOT_STRICTLY_EQUAL:
+                return 4;
+            case BinaryOpSubType::BITWISE_OR:
+            case BinaryOpSubType::BITWISE_XOR:
+            case BinaryOpSubType::BITWISE_AND:
+                return 3;
+            case BinaryOpSubType::LOGICAL_OR:
+            case BinaryOpSubType::LOGICAL_AND:
+                return 2;
+            case BinaryOpSubType::L_PARENTHESES:
+            case BinaryOpSubType::R_PARENTHESES:
+                return 0xFFFF;
+            default:
+                VERIFY_NOT_REACHED();
+        }
+    }
 
     enum class UnaryOpSubType {
         INC, DEC, BITWISE_NOT, LOGICAL_NOT,

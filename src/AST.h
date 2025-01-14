@@ -2,21 +2,24 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
+#include <curl/curl.h>
 #include "LexerTypes.h"
 #include "EnumTypes.h"
 #include "Visitor.h"
 #include "Context.h"
 #include "Util.h"
 
-namespace JSLib {
 
-class Statement;
+namespace JSLib {
+    class ASTVisitor;
+
+    class Statement;
 class NodeBranchInfo;
 class ASTBuilder;
 class ASTNode;
 class ParserContext;
-class Parser;
-    class DummyNode;
+class Parser;;
     class Node;
 
 class Statement{
@@ -148,6 +151,7 @@ public:
 
 };
 
+
 class ForStatement : public Statement {
 friend class Statement;
 private:
@@ -182,19 +186,33 @@ private:
 public:
     ~WhileStatement() override = default;
     static WhileStatement* Create() {return new WhileStatement();}
-    NodeBranchInfo* ParseTokens (ParserContext* context) override {};
+    NodeBranchInfo* ParseTokens (ParserContext* context) override {}
     StatementType Type() override {return StatementType::WHILE_STATEMENT;}
 private:
     std::vector<Token> m_TestTokens;
     std::vector<Token> m_ConsequentTokens;
 };
 
+    class FunctionStatement : public Statement {
+    private:
+        FunctionStatement() = default;
+    public:
+        ~FunctionStatement() override = default;
+        static FunctionStatement* Create() {
+            return new FunctionStatement;
+        }
+        NodeBranchInfo* ParseTokens (ParserContext* context) override {}
+        StatementType Type() override {return StatementType::FUNCTION_STATEMENT;}
+    }
+    ;
+
     class ASTNode {
     protected:
         ASTNode() = default;
-        ASTNode(std::string raw) : m_raw(std::move(raw)) {}
+        explicit ASTNode(std::string raw) : m_raw(std::move(raw)) {}
     public:
-        virtual ~ASTNode() = default;
+        virtual ~ASTNode() =default;
+
         static ASTNode* Create(){
             return new ASTNode();
         }
@@ -203,9 +221,26 @@ private:
             return new ASTNode(raw);
         }
 
+        virtual nlohmann::json toJson() {
+            nlohmann::json jsonObj;
+            jsonObj["raw"] = m_raw;
+            jsonObj["children"] = nlohmann::json::array();
+            for (auto child : m_Children) {
+                jsonObj["children"].push_back(child->toJson());
+            }
 
+            return jsonObj;
+        }
 
-        std::string& Raw() { return m_raw; }
+        virtual ASTNode* Lhs() {}
+        virtual ASTNode* Rhs() {}
+        virtual void RemoveLhs() {}
+        virtual void RemoveRhs() {}
+        virtual void SetLhs(ASTNode* lhs) {};//for BinaryOpNodes
+        virtual void SetRhs(ASTNode* rhs) {};//for BinaryOpNodes
+        virtual void SetNumericValueFromRaw() {}
+
+        std::string& Raw() { return m_raw;}
 
         void SetValue(std::string&& raw) {
             m_raw = raw;
@@ -213,7 +248,7 @@ private:
         void SetValue(const std::string& raw) {
             m_raw = raw;
         }
-
+        void RemoveParent() {m_Parent = nullptr;}
         bool hasParent() {return !!m_Parent;}
         std::vector<ASTNode*>& Children() {return m_Children;}
         ASTNode* Parent() {return m_Parent;}
@@ -221,7 +256,7 @@ private:
         ASTNode* AddChild(ASTNode* child) {m_Children.push_back(child);return this;}
         void AddParent(ASTNode* parent) {m_Parent = parent;}
 
-        virtual bool isIdentifierNode() {return false;}
+        virtual bool isVariableNode() {return false;}
         virtual bool isNumericNode() {return false;}
         virtual bool isScopeNode() {return false;}
         virtual bool isBinaryOpNode() {return false;}
@@ -245,7 +280,7 @@ private:
 
         ASTNode* m_Parent {nullptr};
         std::string m_raw;
-        bool BuilderCheck;
+        bool BuilderCheck {false};
 
     private:
         std::vector<ASTNode*> m_Children;
@@ -334,15 +369,47 @@ private:
 
 };
 
-class IdentifierNode : public ASTNode {
-    public:
-    static IdentifierNode* Create() {
-        return new IdentifierNode();
+class NumericNode : public ASTNode {
+private:
+    NumericNode() = default;
+public:
+    static NumericNode* Create() {
+        return new NumericNode();
     }
-    ~IdentifierNode() = default;
-    bool isIdentifierNode() override {return true;}
+    ~NumericNode() override = default;
+    void SetNumericValueFromRaw() override {
+        m_NumericValue = std::stoi(Raw());
+    }
+    void SetNumericValue(int num) {m_NumericValue = num;}
+    int NumericValue() const  {return m_NumericValue;}
+    bool isNumericNode() override {return true;}
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["raw"] = Raw();
+        jsonObj["numericValue"] = m_NumericValue;
+        return jsonObj;
+    }
+
+private:
+    int m_NumericValue {0};
+};
+
+class VariableNode : public ASTNode {
+    public:
+    static VariableNode* Create() {
+        return new VariableNode();
+    }
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["raw"] = Raw();
+        return jsonObj;
+    }
+    ~VariableNode() = default;
+    bool isVariableNode() override {return true;}
     private:
-    IdentifierNode() = default;
+    VariableNode() = default;
 };
 class UnaryOpNode : public ASTNode {};
 class AssignmentNode : public ASTNode {};
@@ -364,13 +431,21 @@ public:
         nlohmann::json jsonObj;
         jsonObj["raw"] = Raw();
         jsonObj["subType"] = StringifyBinaryOpSubType(m_SubType);
-        jsonObj["lhs"] = LhsNode->toJson();
-        jsonObj["rhs"] = RhsNode->toJson();
+
+        if (LhsNode)
+            jsonObj["lhs"] = LhsNode->toJson();
+        else throw std::runtime_error("LhsNode is nullptr at node with value: " + Raw() + " and Parent: " + Parent()->Raw());
+
+        if (RhsNode)
+            jsonObj["rhs"] = RhsNode->toJson();
+        else throw std::runtime_error("RhsNode is nullptr at node with value: " + Raw() + " and Parent: " + Parent()->Raw());
+
         return jsonObj;
     }
 
     BinaryOpSubType SubType() {return m_SubType;}
-
+    void RemoveLhs() override {LhsNode = nullptr;}
+    void RemoveRhs() override {RhsNode = nullptr;}
     void SetLhs(ASTNode* lhs) override {LhsNode = lhs;}
     void SetRhs(ASTNode* rhs) override {RhsNode = rhs;}
     ASTNode* Lhs() override {return LhsNode;}
@@ -380,8 +455,8 @@ private:
     BinaryOpNode() = default;
 
     BinaryOpSubType m_SubType;
-    ASTNode* LhsNode;
-    ASTNode* RhsNode;
+    ASTNode* LhsNode {nullptr};
+    ASTNode* RhsNode {nullptr};
 
 };
     class BreakNode : public ASTNode {};
@@ -435,7 +510,8 @@ private:
         private:
         FunctionNode() = default;
         ScopeNode* m_FunctionScopeNode;
-
+        std::vector<VariableNode*> m_arguments;
+        std::vector<ASTNode*> m_children;
     };
     class ASTVisitor : public Visitor {
 
@@ -444,7 +520,7 @@ private:
 
         //virtual visitors of ASTNode Sub Types
         virtual void visit(ASTNode &visit) = 0;
-        virtual void visit(IdentifierNode &visit) = 0;
+        virtual void visit(VariableNode &visit) = 0;
         virtual void visit(UnaryOpNode &visit) = 0;
         virtual void visit(AssignmentNode &visit) = 0;
         virtual void visit(VariableDeclarationNode &visit) = 0;
@@ -461,9 +537,9 @@ class ASTBuilder{
 friend class Parser;
 private:
 
-    class ASTSpecializerVisitor : public ASTVisitor {
+    class SpecializerVisitor : public ASTVisitor {
     public:
-        ASTSpecializerVisitor() = default;
+        SpecializerVisitor() = default;
 
         void PlaceNodeAndIterateToChild(ASTNode* NodeToPlace);
         void SetCurrentToTopLevelNode(ASTNode* node) {m_CurrentNode = node; m_TopLevelNode = node;}
@@ -477,18 +553,18 @@ private:
         void ReturnToParent() {m_CurrentNode=m_CurrentNode->Parent();}
         ASTNode *CurrentNode() {return dynamic_cast<ASTNode*>(m_CurrentNode);}
 
-        void visit(ASTNode &visit) override;
-        void visit(IdentifierNode &visit) override;
-        void visit(UnaryOpNode &visit) override;
-        void visit(AssignmentNode &visit) override;
-        void visit(VariableDeclarationNode &visit) override;
-        void visit(BinaryOpNode &visit) override;
-        void visit(ScopeNode &visit) override;
-        void visit(IfNode &visit) override;
-        void visit(ForNode &visit) override;
-        void visit(WhileNode &visit) override;
-        void visit(FunctionNode &visit) override;
-        void visit(ReturnNode &visit) override;
+        void visit(ASTNode &visit) override {};
+        void visit(VariableNode &visit) override {};
+        void visit(UnaryOpNode &visit) override {};
+        void visit(AssignmentNode &visit) override{};
+        void visit(VariableDeclarationNode &visit) override{};
+        void visit(BinaryOpNode &visit) override{};
+        void visit(ScopeNode &visit) override{};
+        void visit(IfNode &visit) override{};
+        void visit(ForNode &visit) override{};
+        void visit(WhileNode &visit) override{};
+        void visit(FunctionNode &visit) override{};
+        void visit(ReturnNode &visit) override{};
 
     private:
         ASTNode* m_CurrentNode;
@@ -496,27 +572,30 @@ private:
         std::vector<ASTNode*> NodeStackToReturnBack;
     };
 public:
-    struct CacheChain { //branchların sistematik olarak iç içe tutulması için
-        CacheChain() =default;
-        ~CacheChain() = default;
-        ASTNode* CurrentTLNodeOfBranch;
-        CacheChain* UpperChain;
-        CacheChain* InnerChain;
-        void AllocInnerChain() {
-            InnerChain = new CacheChain;
-            InnerChain->UpperChain = this;
-        }
-    };
 
     class ImmediateBuilder {
     public:
+
+        //For binary ops
+
+        std::shared_ptr<std::vector<Token>> ConvertInfixToPostfix(const std::vector<Token> &TokensToConvert,
+                                                                  ParserContext *context,
+                                                                  std::unordered_map<std::string, BinaryOpSubType>
+                                                                  & OpTypeMap);
+        ASTNode* GenerateASTFromPostfix(std::shared_ptr<std::vector<Token>> PostfixToASTTokens,
+                                        ParserContext* context,
+                                        std::unordered_map<std::string, BinaryOpSubType>& OpTypeMap);
+
         void SetCurrentNode(ASTNode* node) {m_CurrentNode = node;}
         ASTNode* CurrentNode() {return m_CurrentNode;}
-        void ReturnToMainBranch();
 
-        void PushToNodeStack(ASTNode* node) {m_NodeStack.Push(node);}
-        ASTNode* PopFromNodeStack() {return m_NodeStack.Pop();}
-
+        ASTNode* PeekCurrentTLNodeOfBranch() {
+            ASTNode* current = m_CurrentNode;
+            while (current->hasParent()) {
+                current = current->Parent();
+            }
+            return current;
+        }
 
         void GoTopLevelNodeOfCurrentBranch() {
             while (m_CurrentNode->hasParent()) {
@@ -530,39 +609,32 @@ public:
             }
         }
 
-        void GoToNumericChild();
-
-        std::vector<Token>& EmptyOneExprFromStack(); //parantezli ifade için
-
-        void LinkInnerParenthesesNodeToOuterOne(CacheChain* CurrentChain);
-        void LinkCurrentTLNodeOfBranchToMainBranchNode();
-        bool hasRemainedOneExprInStack();
-
-        bool ParseInnerParentheses(std::vector<Token>& TokenChain,CacheChain* CurrentChain, ParserContext* context);
-
-        bool isStackEmpty() {return m_NodeStack.IsEmpty();}
-        void AddParent(ASTNode* parent) {m_CurrentNode->AddParent(parent);}
-        void AddChild(ASTNode* child) {m_CurrentNode->AddChild(child);}
-        CacheChain* tlChain() {
-            return &m_TopLevelCacheChain;
+        void AddParent(ASTNode* parent) {
+            parent->SetLhs(CurrentNode());
+            m_CurrentNode->AddParent(parent);
         }
-        Stack<ASTNode*>& NodeStack() {return m_NodeStack;}
+        void AddRhs(ASTNode* child) {
+            child->AddParent(CurrentNode());
+            m_CurrentNode->SetRhs(child);
+        }
+        void AddLhs(ASTNode* child) {
+            child->AddParent(CurrentNode());
+            m_CurrentNode->SetLhs(child);
+        }
 
-        Stack<Token>& TokenStack() {return m_TokenStack;}
+
+        Stack<Token>& OperatorStack() {return m_OperatorStack;}
     private:
         ASTNode* m_CurrentNode;
         ASTNode* m_LastUsedMainBranchNode;
-        Stack<ASTNode*> m_NodeStack;
-        Stack<Token> m_TokenStack;
-        CacheChain m_TopLevelCacheChain;
-
+        Stack<Token> m_OperatorStack;
     };
 public:
-    ASTBuilder() : m_Builder(new ImmediateBuilder()), m_Visitor(new ASTSpecializerVisitor()) {};
+    ASTBuilder() : m_Builder(new ImmediateBuilder()), m_Visitor(new SpecializerVisitor()) {};
     ~ASTBuilder() =default;
 
 public:
-    ASTSpecializerVisitor* visitor() {return m_Visitor;}
+    SpecializerVisitor* visitor() {return m_Visitor;}
     ImmediateBuilder* immBuilder() {return m_Builder;}
     ASTNode* GenerateScaffoldingByShape();
     void SetBuilderParametersByLookingShape();
@@ -571,7 +643,7 @@ public:
 private:
     NodeBranchInfo* m_NodeBranchInfo;
     ImmediateBuilder* m_Builder;
-    ASTSpecializerVisitor* m_Visitor;
+    SpecializerVisitor* m_Visitor;
 };
 
 

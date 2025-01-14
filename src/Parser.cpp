@@ -11,41 +11,124 @@ Parser* Parser::m_Instance = nullptr;
 
 IfStatement* Parser::CreateNewIfStatement() {
     auto NewStatement = IfStatement::Create();
+    auto PermanentConditionCallableForParentheses = [&](TokenType type = TokenType::L_PARENTHESES)->int {
+        tokenCounter()->PushToBracketOrBraceStack(type);
+        Consume();
+        int i = 0;
+        while (PeekFront(i) != TokenType::END_OF_STREAM) {
+            DEBUG(LOGGER_BANNER(PARSER) << "PeekFront(i): " << Lexer::StringifyTokenType(PeekFront(i)));
+            //if ( ( a - b ) * c ) { return 1 + 2 + d ; }")
+            if (PeekFront(i) == type) {
+                tokenCounter()->PushToBracketOrBraceStack(type);
+            } else if (tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(PeekFront(i))) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    };
+    auto PermanentConditionCallableForBraces = [&](TokenType type = TokenType::L_BRACE)->int {
+        if (PeekFront(0)==TokenType::R_PARENTHESES)
+            Consume();
 
-        NewStatement->PushTestTokens(ConsumeSpecificSpan(TokenType::L_PARENTHESES,TokenType::R_PARENTHESES).value());
+        tokenCounter()->PushToBracketOrBraceStack(type);
 
-        NewStatement->PushConseqTokens(ConsumeSpecificSpan(TokenType::L_BRACE,TokenType::R_BRACE).value());
+        Consume();
+
+        int i = 0;
+
+        while (PeekFront(i++) != TokenType::END_OF_STREAM) {
+            if (PeekFront(i) == type) {
+                tokenCounter()->PushToBracketOrBraceStack(type);
+            }
+            if (tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(PeekFront(i))) {
+                return i;
+            }
+        }
+        VERIFY_NOT_REACHED();
+    };
+    NewStatement->PushTestTokens(ConsumeSpecificSpan(
+    [&]()->void {
+        ExpectToken(TokenType::L_PARENTHESES);
+        ExpectTokenAtAnywhere(TokenType::R_PARENTHESES);
+    }, PermanentConditionCallableForParentheses
+    ).value());
+
+        NewStatement->PushConseqTokens(ConsumeSpecificSpan([&]()->void {
+            ExpectToken(TokenType::L_BRACE);
+            ExpectTokenAtAnywhere(TokenType::R_BRACE);
+        },PermanentConditionCallableForBraces
+        ).value());
 
         if (PeekFront(1) == TokenType::ELSE) {
             Consume();
-            NewStatement->ApproveAlternateToken(ConsumeSpecificSpan(TokenType::L_BRACE,TokenType::R_BRACE).value());
+            NewStatement->ApproveAlternateToken(ConsumeSpecificSpan([&]()->void {
+                ExpectToken(TokenType::L_BRACE);
+                ExpectTokenAtAnywhere(TokenType::R_BRACE);
+            },PermanentConditionCallableForBraces).value());
         }
             return NewStatement;
 }
-    ForStatement* Parser::CreateNewForStatement() {
+    WhileStatement* Parser::CreateNewWhileStatement() {
 
     }
 
 
-        BinaryOpStatement* Parser::CreateNewBinaryOpStatement() {
-            auto NewStatement = BinaryOpStatement::Create();
+    BinaryOpStatement* Parser::CreateNewBinaryOpStatement() {
+    auto NewStatement = BinaryOpStatement::Create();
 
-            NewStatement->AddToChain(GetPreviousTokenWithoutGoingBack());
+    if (!(PeekFront(0) == TokenType::L_PARENTHESES))
+        NewStatement->AddToChain(GetPreviousTokenWithoutGoingBack());
 
 
-            bool TurnIsOnBinaryOpStatement = true;
-            while (PeekFront(0) == TokenType::NUMERIC ||
-                PeekFront(0) == TokenType::IDENTIFIER||
-                PeekFront(0) == TokenType::BINARY_OP)
+
+    while (PeekFront(0) == TokenType::NUMERIC       ||
+           PeekFront(0) == TokenType::IDENTIFIER    ||
+           PeekFront(0) == TokenType::BINARY_OP     ||
+           PeekFront(0) == TokenType::L_PARENTHESES ||
+           PeekFront(0) == TokenType::R_PARENTHESES)
             {
-                if (PeekFront(0) == TokenType::BINARY_OP && TurnIsOnBinaryOpStatement) {
+
+                if (PeekFront(0) == TokenType::L_PARENTHESES) {
+                    tokenCounter()->PushToBracketOrBraceStack(TokenType::L_PARENTHESES);
                     NewStatement->AddToChain(Consume());
-                    TurnIsOnBinaryOpStatement = false;
+                    if (PeekHind(1)==TokenType::NUMERIC)
+                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
+                    if (PeekFront(1) == TokenType::BINARY_OP     &&
+                        !(tokenCounter()->Peek(1)->Lexeme == "+" ||
+                        tokenCounter()->Peek(1)->Lexeme == "-" ))
+                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
+                    if (tokenCounter()->Peek(1)->Lexeme == "+" ||
+                        tokenCounter()->Peek(1)->Lexeme == "-" )
+                        tokenCounter()->Peek(1)->isSign = true;
+
+                    continue;
                 }
-                if (PeekFront(0) == TokenType::IDENTIFIER || PeekFront(0) == TokenType::NUMERIC
-                    && TurnIsOnBinaryOpStatement) {
+
+                if (PeekFront(0) == TokenType::R_PARENTHESES) {
+                    if (!tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(TokenType::R_PARENTHESES))
+                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
+                    if (!(PeekFront(0) == TokenType::BINARY_OP || PeekFront(0) == TokenType::R_PARENTHESES))
+                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
+                    if (!(PeekHind(1) == TokenType::IDENTIFIER || PeekHind(1) == TokenType::NUMERIC))
+                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
                     NewStatement->AddToChain(Consume());
-                    TurnIsOnBinaryOpStatement = true;
+                    continue;
+                }
+
+                if (PeekFront(0) == TokenType::BINARY_OP) {
+                    NewStatement->AddToChain(Consume());
+                    if ((tokenCounter()->Peek(0)->Lexeme == "+" ||
+                        tokenCounter()->Peek(0)->Lexeme == "-") &&
+                        (tokenCounter()->Peek(1)->Type == TokenType::NUMERIC ||
+                        tokenCounter()->Peek(1)->Type == TokenType::IDENTIFIER)) {
+                        tokenCounter()->Peek(0)->isSign = true;
+                        NewStatement->AddToChain(Consume());
+                        continue;
+                    }
+                }
+                if ((PeekFront(0) == TokenType::IDENTIFIER || PeekFront(0) == TokenType::NUMERIC)) {
+                    NewStatement->AddToChain(Consume());
                 }
             }
             return NewStatement;
@@ -81,7 +164,8 @@ IfStatement* Parser::CreateNewIfStatement() {
                     Consume();
                     RetValue = StatementParser(CreateNewIfStatement(), context);
                     break;
-                case TokenType::BINARY_OP:
+                case TokenType::L_PARENTHESES:
+                    case TokenType::BINARY_OP:
                     RetValue = StatementParser(CreateNewBinaryOpStatement(), context);
                     break;
                 case TokenType::CLASS:
@@ -141,50 +225,21 @@ IfStatement* Parser::CreateNewIfStatement() {
 
 }
 
-std::optional<std::vector<Token>> Parser::ConsumeSpecificSpan(TokenType FirstToken, TokenType LastToken) {
 
-    std::vector<Token> TokenList;
+template <CallableReturnsInt T, CallableReturnsVoid F>
+std::optional<std::vector<Token>> Parser::ConsumeSpecificSpan(F&& StartingCondition, T&& PermanentCondition) {
 
-    VERIFY(ExpectToken(FirstToken), "Expected "<< Lexer::StringifyTokenType(FirstToken)<<" type of token after consuming a specific token!");
-            VERIFY(ExpectTokenAtAnywhere(LastToken),"Expected " << Lexer::StringifyTokenType(LastToken)<< " at anywhere in source code!");
+            std::vector<Token> TokenList;
+            StartingCondition();
+            int i = PermanentCondition();
 
-            Consume();
-            int LoopCounter = 0;
-    while (PeekFront(0) != LastToken) {
-        VERIFY(LoopCounter<20, "LoopCounter has been exceeded");
-        DEBUG(LOGGER_BANNER(PARSER)<<"Pushed with Token Type: " << Lexer::StringifyTokenType(*tokenCounter()->GetCurrentTokenPtr()));
-        TokenList.push_back(Consume());
-    }
-            Consume();
+            while (i-- > 0)
+                TokenList.push_back(Consume());
 
-    return std::move(*new std::optional(TokenList));
+            return std::move(*new std::optional(TokenList));
 };
-std::optional<std::vector<Token>> Parser::ConsumeStatement(StatementType statementType) {
 
-    Token* CurrentToken;
 
-    if (tokenCounter()->GetCurrentTokenPtr()->StatType != statementType)
-        return std::nullopt;
-
-    auto StatementList = *new std::vector<Token>;
-
-    while (tokenCounter()->GetCurrentTokenPtr()->Type != TokenType::END_OF_SCOPE) {
-        if (tokenCounter()->GetCurrentTokenPtr()->StatType != StatementType::INVALID_STATEMENT) {
-            CurrentToken = tokenCounter()->GetCurrentTokenPtr();
-            tokenCounter()->PushToStatementTracerStack();
-            tokenCounter()->Next();
-        }
-
-        StatementList.push_back(*CurrentToken);
-
-        if (tokenCounter()->GetCurrentTokenPtr()->Type == TokenType::END_OF_STATEMENT) {
-            tokenCounter()->PopFromStatementTracerStack();
-            break;
-        }
-    }
-
-    return std::move(*new std::optional<std::vector<Token>>(StatementList));
-};
 
 Token Parser::Consume() {
 
@@ -199,9 +254,21 @@ Token Parser::Consume() {
         return tokenCounter()->GetPrevTokenWithoutGoingBack();
     }
 
+    void Parser::SanitizeEmptyTokens(std::vector<Token>& TokensToSanitize) {
+        int i = 0;
+        for (const auto& token: TokensToSanitize) {
+            if (token.Lexeme.empty())
+                TokensToSanitize.erase(TokensToSanitize.begin() + i);
+            i++;
+        }
+
+    }
+
+
 TokenType Parser::PeekFront(int Distance){
         return tokenCounter()->Peek(Distance)->Type;
 };
+
 TokenType Parser::PeekHind(int Distance){
     return tokenCounter()->Peek(-Distance)->Type;
 }

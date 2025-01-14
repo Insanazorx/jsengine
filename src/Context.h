@@ -21,33 +21,11 @@ class Context{};
         void incConsumeCount() {m_ConsumeCountFromMinorCounters++;}
         void decConsumeCount() {m_ConsumeCountFromMinorCounters--;}
         int ConsumeCountFromMinorCounters() const {return m_ConsumeCountFromMinorCounters;}
-        Parser* ParserObj() {return parserObj;};
-        bool isBinaryOpExprParsingStartedOnce() {return m_isBinaryOpExprParsingStartedOnce;}
-        void ResetBinaryOpExprParsingState() {m_isBinaryOpExprParsingStartedOnce = false;}
-        void SetBinaryOpExprParsingState() {m_isBinaryOpExprParsingStartedOnce = true;}
-
-        void PushBinaryOpGenerateImmediateASTCallStack(std::string* funcName) {
-            m_BinaryOpGenerateImmediateASTcallStack.Push(std::move(*funcName));
-        };
-        void PopBinaryOpGenerateImmediateASTcallStack() {
-            m_BinaryOpGenerateImmediateASTcallStack.Pop();
-        }
-        std::string& PeekForParentFunctionName() {
-            auto name = m_BinaryOpGenerateImmediateASTcallStack.Peek();
-            return name;
-        }
-
-        void IncDepth(){InWhichDepthGenerateImmediateASTInnerLoopReturnedFalse++;}
-        void ResetDepth(){InWhichDepthGenerateImmediateASTInnerLoopReturnedFalse=0;}
-        int GetDepth(){return InWhichDepthGenerateImmediateASTInnerLoopReturnedFalse;}
 
     private:
         Stack<std::string> m_MainCallStack;
-        int InWhichDepthGenerateImmediateASTInnerLoopReturnedFalse;
-        Stack<std::string> m_BinaryOpGenerateImmediateASTcallStack;
         Parser* parserObj;
         int m_ConsumeCountFromMinorCounters {0};
-        bool m_isBinaryOpExprParsingStartedOnce {false};
     };
 
 }
