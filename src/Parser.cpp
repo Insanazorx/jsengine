@@ -100,7 +100,6 @@ IfStatement* Parser::CreateNewIfStatement() {
                         VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
                     if (tokenCounter()->Peek(1)->Lexeme == "+" ||
                         tokenCounter()->Peek(1)->Lexeme == "-" )
-                        tokenCounter()->Peek(1)->isSign = true;
 
                     continue;
                 }
@@ -122,7 +121,6 @@ IfStatement* Parser::CreateNewIfStatement() {
                         tokenCounter()->Peek(0)->Lexeme == "-") &&
                         (tokenCounter()->Peek(1)->Type == TokenType::NUMERIC ||
                         tokenCounter()->Peek(1)->Type == TokenType::IDENTIFIER)) {
-                        tokenCounter()->Peek(0)->isSign = true;
                         NewStatement->AddToChain(Consume());
                         continue;
                     }

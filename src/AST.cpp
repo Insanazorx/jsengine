@@ -253,93 +253,116 @@ namespace JSLib {
     ASTNode* ASTBuilder::ImmediateBuilder::GenerateASTFromPostfix(std::shared_ptr<std::vector<Token>> PostfixToASTTokens,
                                                                   ParserContext* context,
                                                                   std::unordered_map<std::string,BinaryOpSubType>& OpTypeMap) {
-        bool IsOnceActivated = false;
         int TokenIndex = 0;
+        bool isRunOnce = false;
         for (auto& token : *PostfixToASTTokens) {
-
-            DEBUG(LOGGER_BANNER(ImmediateBuilder)<< "token: " << token.Lexeme);
-
-            if (token.Type == TokenType::NUMERIC || token.Type == TokenType::IDENTIFIER) {
+            if (token.Type == TokenType::NUMERIC) {
                 TokenIndex++;
                 continue;
             }
-
+            if (token.Type == TokenType::IDENTIFIER) {
+                TokenIndex++;
+                continue;
+            }
             if (token.Type == TokenType::BINARY_OP) {
-
-                auto it = OpTypeMap.find(token.Lexeme);
-                if (it == OpTypeMap.end()) {
-                    DEBUG("Could not find the operator in OpTypeMap");
+                auto BinaryOpIteratorType = OpTypeMap.find(token.Lexeme);
+                if (BinaryOpIteratorType == OpTypeMap.end()) {
                     VERIFY_NOT_REACHED();
                 }
-                auto OpType = it->second;
+                ASTNode* NumericOrVariable = nullptr;
+                auto OpType = BinaryOpIteratorType->second;
+                auto OpNode = BinaryOpNode::Create();
+                OpNode->SetValue(token.Lexeme);
+                OpNode->SetSubType(OpType);
 
-                auto NewNode = BinaryOpNode::Create();
-                NewNode->SetSubType(OpType);
-                NewNode->SetValue(token.Lexeme);
+                if (!isRunOnce) {
+                    auto& Rhs = PostfixToASTTokens->at(TokenIndex - 1);
+                    auto& Lhs = PostfixToASTTokens->at(TokenIndex - 2);
 
-                token.Analyzed = true;
-
-                if (!IsOnceActivated) {
-                    NumericNode* LhsNodeIfNumeric;
-                    NumericNode* RhsNodeIfNumeric;
-                    VariableNode* LhsNodeIfVariable;
-                    VariableNode* RhsNodeIfVariable;
-
-                    SetCurrentNode(NewNode);
-                    auto& RhsToken = PostfixToASTTokens->at(TokenIndex-1);
-                    auto& LhsToken = PostfixToASTTokens->at(TokenIndex-2);
-                    if (RhsToken.Type == TokenType::NUMERIC) {
-                        RhsNodeIfNumeric = NumericNode::Create();
-                        RhsNodeIfNumeric->SetValue(RhsToken.Lexeme);
-                        RhsNodeIfNumeric->SetNumericValueFromRaw();
-                    } else if (RhsToken.Type == TokenType::IDENTIFIER) {
-                        RhsNodeIfVariable = VariableNode::Create();
-                        RhsNodeIfVariable->SetValue(RhsToken.Lexeme);
+                    if (Rhs.Type == TokenType::NUMERIC) {
+                        NumericOrVariable = NumericNode::Create();
+                        NumericOrVariable->SetValue(Rhs.Lexeme);
+                        NumericOrVariable->SetNumericValueFromRaw();
+                        OpNode->SetRhs(NumericOrVariable);
                     }
-                    RhsToken.Analyzed = true;
-
-                    if (LhsToken.Type == TokenType::NUMERIC) {
-                        LhsNode = NumericNode::Create();
-                        LhsNode->SetValue(LhsToken.Lexeme);
-                        LhsNode->SetNumericValueFromRaw();
-                    } else if (LhsToken.Type == TokenType::IDENTIFIER) {
-                        LhsNode = VariableNode::Create();
-                        LhsNode->SetValue(LhsToken.Lexeme);
+                    else if (Rhs.Type == TokenType::IDENTIFIER) {
+                        NumericOrVariable = VariableNode::Create();
+                        NumericOrVariable->SetValue(Rhs.Lexeme);
+                        OpNode->SetRhs(NumericOrVariable);
                     }
-                    LhsToken.Analyzed = true;
 
-                    VERIFY(LhsNode,"lhs node could not get created");
-                    VERIFY(RhsNode,"rhs node could not get created");
 
-                    AddLhs(LhsNode);
-                    AddRhs(RhsNode);
 
-                    IsOnceActivated = true;
+                    if (Lhs.Type == TokenType::NUMERIC) {
+                        auto LhsNumeric = NumericNode::Create();
+                        LhsNumeric->SetValue(Lhs.Lexeme);
+                        LhsNumeric->SetNumericValueFromRaw();
+                        OpNode->SetLhs(LhsNumeric);
+                    }
+                    else if (Lhs.Type == TokenType::IDENTIFIER) {
+                        auto LhsVariable = VariableNode::Create();
+                        LhsVariable->SetValue(Lhs.Lexeme);
+                        OpNode->SetLhs(LhsVariable);
+                    }
+
+                    Rhs.Analyzed = true;
+                    Lhs.Analyzed = true;
+                    token.Analyzed = true;
+                    isRunOnce = true;
+                    TokenIndex++;
+
+                    SetCurrentNode(OpNode);
+
                     continue;
                 }
 
-                AddParent(NewNode);
-                GoTopLevelNodeOfCurrentBranch();
+                int i = TokenIndex - 1;
+                bool isLhs = false;
+                while (PostfixToASTTokens->at(i).Analyzed) {
+                    isLhs = true;
+                    i--;
+                }
 
-                int i = 0;
-                while (TokenIndex != i && PostfixToASTTokens->at(TokenIndex - i++).Analyzed);
+                auto& CurrentToken = PostfixToASTTokens->at(i);
+                if (CurrentToken.Type == TokenType::NUMERIC) {
+                    NumericOrVariable = NumericNode::Create();
+                    NumericOrVariable->SetValue(CurrentToken.Lexeme);
+                    NumericOrVariable->SetNumericValueFromRaw();
+                    if (isLhs) {
+                        AddLhs(NumericOrVariable, OpNode);
+                    } else {
+                        AddRhs(NumericOrVariable, OpNode);
+                    }
+                    CurrentToken.Analyzed = true;
+                    token.Analyzed = true;
+                }
+                else if (CurrentToken.Type == TokenType::IDENTIFIER) {
+                    NumericOrVariable = VariableNode::Create();
+                    NumericOrVariable->SetValue(CurrentToken.Lexeme);
+                    if (isLhs) {
+                        AddLhs(NumericOrVariable, OpNode);
+                    } else {
+                        AddRhs(NumericOrVariable, OpNode);
+                    }
 
-                if (PostfixToASTTokens->at(TokenIndex - i).Type == TokenType::NUMERIC) {
-                    auto Node = NumericNode::Create();
-                    Node->SetValue(PostfixToASTTokens->at(TokenIndex - i).Lexeme);
-                    Node->SetNumericValueFromRaw();
-                    NewNode->SetRhs(Node);
-                } else if (PostfixToASTTokens->at(TokenIndex - i).Type == TokenType::IDENTIFIER) {
-                    auto Node = VariableNode::Create();
-                    Node->SetValue(PostfixToASTTokens->at(TokenIndex - i).Lexeme);
-                    NewNode->SetRhs(Node);
+                }
+
+                if (isLhs) {
+                    AddRhs(CurrentNode(), OpNode);
+                } else {
+                    AddLhs(CurrentNode(), OpNode);
                 }
 
 
-                TokenIndex++;
+                CurrentToken.Analyzed=true;
+                token.Analyzed = true;
+
+                GoTopLevelNodeOfCurrentBranch();
+
                 continue;
             }
         }
+        return CurrentNode();
     }
     bool ASTBuilder::SpecializerVisitor::CheckIfStackContainsElement() {};
     bool ASTBuilder::SpecializerVisitor::CheckIfMoreThanOneChild() {};

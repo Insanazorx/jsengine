@@ -609,17 +609,13 @@ public:
             }
         }
 
-        void AddParent(ASTNode* parent) {
-            parent->SetLhs(CurrentNode());
-            m_CurrentNode->AddParent(parent);
+        void AddRhs(ASTNode* child, ASTNode* parent) {
+            child->AddParent(parent);
+            parent->SetRhs(child);
         }
-        void AddRhs(ASTNode* child) {
-            child->AddParent(CurrentNode());
-            m_CurrentNode->SetRhs(child);
-        }
-        void AddLhs(ASTNode* child) {
-            child->AddParent(CurrentNode());
-            m_CurrentNode->SetLhs(child);
+        void AddLhs(ASTNode* child, ASTNode* parent) {
+            child->AddParent(parent);
+            parent->SetLhs(child);
         }
 
 

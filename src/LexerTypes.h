@@ -30,19 +30,22 @@ namespace JSLib {
         TokenType Type;
         std::string Lexeme;
         bool Analyzed {false};
-        bool isSign {false};
+        int Line {0};
+        int Pos {0};
 
         Token(const Token& other) {
             Type = other.Type;
             Lexeme = other.Lexeme;
             Analyzed = other.Analyzed;
-            isSign = other.isSign;
+            Line = other.Line;
+            Pos = other.Pos;
         }
         void operator=(const Token& other) {
             Type = other.Type;
             Lexeme = other.Lexeme;
             Analyzed = other.Analyzed;
-            isSign = other.isSign;
+            Line = other.Line;
+            Pos = other.Pos;
         }
     };
 }

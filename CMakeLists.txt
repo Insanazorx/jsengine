@@ -19,7 +19,11 @@ add_executable(js src/main.cpp
         src/EnumTypes.h
         src/Context.h
         src/Util.h
-        src/Visitor.h)
+        src/Visitor.h
+        src/SyntaxValidator.h
+        src/SyntaxValidator.cpp
+        src/SourceCode.h
+        src/SourceCode.cpp)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

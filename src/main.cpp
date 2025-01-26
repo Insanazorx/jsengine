@@ -6,7 +6,7 @@
 using namespace JSLib;
 
 int main (void) {
-    std::string expr("if ( d + ( a - b ) * c ) { return 1 + 2 + 3 ; }");
+    std::string expr("if ( d - ( a + b ) * c ) { return 1 + 2 + 3 ; }");
     Lexer lexer(expr);
     lexer.Scan();
     for (auto token : lexer.Tokens())
