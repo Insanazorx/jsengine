@@ -31,24 +31,28 @@ namespace JSLib {
 
         VERIFY(index >= 0 && index < str.length(),"index out of range");
 
-        // Verilen indexten başlayarak alt dizeyi elde et
         auto sub = str.substr(index, ch.length());
 
-        // Alt diziyi ve verilen alt dizeyi karşılaştır
-        if (sub.length() < str.length()) {
+        if (sub.length() < ch.length()) {
             return false;
         }
 
-        return sub.compare(str) == 0;
+        return sub == ch;
 
 
     }
 
 
-    inline bool only_consist_of(const std::string& str, const std::string& allowedChars) {
-        return std::all_of(str.begin(), str.end(), [&allowedChars](char c) {
-            return allowedChars.find(c) != std::string::npos; // Karakter, allowedChars içinde olmalı
-        });
+    inline bool only_consist_of(const std::string& str, const char allowedChars) {
+        int MatchCount = 0;
+        for (auto ch : str) {
+            if (ch == allowedChars) {
+                MatchCount++;
+            }
+        }
+        if (MatchCount == str.length())
+            return true;
+        return false;
     }
 
     inline std::vector<std::string> Split(const std::string& str, char delimiter) {
@@ -75,7 +79,7 @@ namespace JSLib {
         int j = 0;
 
         for (auto word : result) {
-            if (only_consist_of(str," "))
+            if (only_consist_of(word,' '))
                 poses.push_back(j);
             j++;
         }

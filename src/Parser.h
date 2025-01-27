@@ -67,8 +67,7 @@ public:
     }
     ASTNode* ParseInGlobalContextFromTokens() {return EnterAnalyzerLoop();}
     ASTNode* ParseFunction() {}
-    ASTNode* GenerateAST(NodeBranchInfo* NodeInfo);
-    ASTNode* GeneratePartialAST(NodeBranchInfo* NodeInfo);
+    ASTNode* ValidateSyntaxByVisitor(NodeBranchInfo* NodeInfo);
 
     ASTNode* GetTopLevelASTNode() {return m_TopLevelASTNode;};
 private:

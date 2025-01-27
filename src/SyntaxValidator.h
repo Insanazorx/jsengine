@@ -1,12 +1,17 @@
-#ifndef SYNTAXVALIDATOR_H
-#define SYNTAXVALIDATOR_H
+#pragma once
+
+#include "AST.h"
+
 namespace JSLib {
+
     class SyntaxValidator {
     public:
         SyntaxValidator() = default;
         ~SyntaxValidator() = default;
         static SyntaxValidator* Create() {return new SyntaxValidator();}
-        void Validate();
+        int Validate(ASTNode* node) {
+        }
+
     };
 }
-#endif //SYNTAXVALIDATOR_H
+

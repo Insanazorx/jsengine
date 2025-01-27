@@ -46,28 +46,6 @@ namespace JSLib {
             AnalyzedThisDepth = true;
         }
 
-        NewInfo->Shape()->Builder().AddChild(TestNode);
-        NewInfo->Shape()->Builder().GotoParent();
-
-        NewInfo->Shape()->Builder().AddChild({});
-
-        for (auto node : ConsequentNode->Children()) {
-            NewInfo->Shape()->Builder().AddChild(node);
-            NewInfo->Shape()->Builder().GotoParent();
-        }
-
-        NewInfo->Shape()->Builder().GotoParent();
-
-        auto alternateStatementHolder = ASTNode::Create();
-        alternateStatementHolder->SetValue("Alternate Statement Holder");
-        NewInfo->Shape()->Builder().AddChild(alternateStatementHolder);
-
-        for (auto node: AlternateNode->Children()) {
-            NewInfo->Shape()->Builder().AddChild(node);
-            NewInfo->Shape()->Builder().GotoParent();
-        }
-
-        NewInfo->Shape()->Builder().GotoParent();
 
         context->PopCallStack();
         return NewInfo;

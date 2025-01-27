@@ -215,11 +215,11 @@ IfStatement* Parser::CreateNewIfStatement() {
 
             if (context->isAnalyzingLoopDone()) {
                 context->PopCallStack();
-                return GeneratePartialAST(branchInfo);
+                return ValidateSyntaxByVisitor(branchInfo);
             }
 
             context->PopCallStack();
-            return branchInfo->ExtractDummyNode();
+            return branchInfo->Node();
 
 }
 
@@ -301,30 +301,7 @@ bool Parser::ExpectTokenAtAnywhere (TokenType TokenTypeToExpect) {
 }
 
 
-ASTNode* Parser::GeneratePartialAST(NodeBranchInfo* NodeInfo){
-
-    auto ScaffoldingTopLevelNode = Builder()->GenerateScaffoldingByShape();
-    Builder()->visitor()->SetCurrentToTopLevelNode(ScaffoldingTopLevelNode);
-
-    while (Builder()->visitor()->SwitchToOtherChild()) {
-        while (Builder()->visitor()->CheckIfThereAreChildren()) {
-            if(Builder()->visitor()->CheckIfMoreThanOneChild())
-                Builder()->visitor()->PushToNodeStack(
-                    Builder()->visitor()->CurrentNode()
-                );
-            Builder()->visitor()->PlaceNodeAndIterateToChild(
-                Builder()->SearchSpecificNode(NodeInfo, Builder()->visitor()->CurrentNode())
-            );
-        }
-        if (Builder()->visitor()->CheckIfStackContainsElement())
-            Builder()->visitor()->ReturnToLastStackElement();
-    }
-    return Builder()->visitor()->CurrentNode();
-}
-
-
-
-ASTNode* GenerateAST(ParserContext* context) {
+ASTNode* Parser::ValidateSyntaxByVisitor(NodeBranchInfo* NodeInfo){
 
 }
 

@@ -3,7 +3,6 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include <curl/curl.h>
 #include "LexerTypes.h"
 #include "EnumTypes.h"
 #include "Visitor.h"
@@ -224,11 +223,7 @@ private:
         virtual nlohmann::json toJson() {
             nlohmann::json jsonObj;
             jsonObj["raw"] = m_raw;
-            jsonObj["children"] = nlohmann::json::array();
-            for (auto child : m_Children) {
-                jsonObj["children"].push_back(child->toJson());
-            }
-
+            jsonObj["NodeType"] = "ASTNode";
             return jsonObj;
         }
 
@@ -250,10 +245,7 @@ private:
         }
         void RemoveParent() {m_Parent = nullptr;}
         bool hasParent() {return !!m_Parent;}
-        std::vector<ASTNode*>& Children() {return m_Children;}
         ASTNode* Parent() {return m_Parent;}
-        ASTNode* GetChild(int index) {return m_Children[index];}
-        ASTNode* AddChild(ASTNode* child) {m_Children.push_back(child);return this;}
         void AddParent(ASTNode* parent) {m_Parent = parent;}
 
         virtual bool isVariableNode() {return false;}
@@ -282,74 +274,22 @@ private:
         std::string m_raw;
         bool BuilderCheck {false};
 
-    private:
-        std::vector<ASTNode*> m_Children;
     };
 
 class NodeBranchInfo {
 
-public:
-    NodeBranchInfo() noexcept = default;
 private:
-    class ASTShape {
-    friend class NodeBranchInfo;
-    friend class ASTBuilder;
-    //friend class ASTBuilder::ShapeBuilder;
-    public:
-        ASTShape() = default;
-        ~ASTShape() = default;
-
-
-        class DummyTreeBuilder {
-        friend class ASTShape;
-        private:
-            DummyTreeBuilder() = default;
-            ~DummyTreeBuilder()= default;
-        public:
-            void UpdateInWhichChildBranch() {
-                ASTNode* parent = CurrentDummyNode->Parent();
-                InWhichChildBranch = FindIndex<ASTNode*>(parent->Children(),CurrentDummyNode);
-            }
-            void GotoParent () {
-                CurrentDummyNode = CurrentDummyNode->Parent();
-                UpdateInWhichChildBranch();
-            }
-
-            void AddChild(ASTNode* node) {
-                CurrentDummyNode->AddChild(node);
-            }
-        private:
-            ASTNode* CurrentDummyNode;
-            int InWhichChildBranch;
-        };
-    public:
-        DummyTreeBuilder& Builder() {
-            return m_Builder;
-        }
-    private:
-        ASTNode* TLNode;
-        DummyTreeBuilder m_Builder;
-};
-
+    NodeBranchInfo() = default;
 public:
     static NodeBranchInfo* Create() {
         return new NodeBranchInfo();
     }
-    void SetStatementType(StatementType Type) {
-        m_type = Type;
-    }
-    ASTShape* Shape() {
-        return &m_shape;
-    }
-    ASTNode* ExtractDummyNode() {
-        return m_shape.TLNode;
-    }
+    ~NodeBranchInfo() = default;
+    ASTNode* Node() {return m_node;}
+    void SetNode(ASTNode* node) {m_node = node;}
 private:
-
-
-    StatementType m_type;
-    ASTShape m_shape;
-
+    ASTNode* m_node;
+    int m_tokenIndex {0};
 };
 
 
