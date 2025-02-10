@@ -79,18 +79,18 @@ std::string Lexer::StringifyTokenType (const Token& token) {
             return "NUMERIC";
         case TokenType::FUNCTION:
             return "FUNCTION";
-        case TokenType::L_PARENTHESES:
-            return "L_PARENTHESES";
-        case TokenType::R_PARENTHESES:
-            return "R_PARENTHESES";
-        case TokenType::END_OF_STATEMENT:
-            return "END_OF_STATEMENT";
+        case TokenType::L_BRACKET:
+            return "L_BRACKET";
+        case TokenType::R_BRACKET:
+            return "R_BRACKET";
+        case TokenType::SEMICOLON:
+            return "SEMICOLON";
         case TokenType::END_OF_STREAM:
             return "END_OF_STREAM";
         case TokenType::COMMA:
             return "COMMA";
-        case TokenType::SEMICOLON:
-            return "SEMICOLON";
+        case TokenType::COLON:
+            return "COLON";
         case TokenType::DOT:
             return "DOT";
         default:
@@ -136,18 +136,18 @@ std::string Lexer::StringifyTokenType (TokenType tokentype) {
             return "NUMERIC";
         case TokenType::FUNCTION:
             return "FUNCTION";
-        case TokenType::L_PARENTHESES:
-            return "L_PARENTHESES";
-        case TokenType::R_PARENTHESES:
-            return "R_PARENTHESES";
-        case TokenType::END_OF_STATEMENT:
-            return "END_OF_STATEMENT";
+        case TokenType::L_BRACKET:
+            return "L_BRACKET";
+        case TokenType::R_BRACKET:
+            return "R_BRACKET";
+        case TokenType::SEMICOLON:
+            return "SEMICOLON";
         case TokenType::END_OF_STREAM:
             return "END_OF_STREAM";
         case TokenType::COMMA:
             return "COMMA";
-        case TokenType::SEMICOLON:
-            return "SEMICOLON";
+        case TokenType::COLON:
+            return "COLON";
         case TokenType::DOT:
             return "DOT";
         default:

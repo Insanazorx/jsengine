@@ -9,135 +9,36 @@
 namespace JSLib {
 Parser* Parser::m_Instance = nullptr;
 
+    ReturnStatement* Parser::CreateNewReturnStatement() {
+        auto NewStatement = ReturnStatement::Create();
+        Consume();
+        NewStatement->awaitExpression(Context());
+        return NewStatement;
+    }
+
 IfStatement* Parser::CreateNewIfStatement() {
     auto NewStatement = IfStatement::Create();
-    auto PermanentConditionCallableForParentheses = [&](TokenType type = TokenType::L_PARENTHESES)->int {
-        tokenCounter()->PushToBracketOrBraceStack(type);
-        Consume();
-        int i = 0;
-        while (PeekFront(i) != TokenType::END_OF_STREAM) {
-            DEBUG(LOGGER_BANNER(PARSER) << "PeekFront(i): " << Lexer::StringifyTokenType(PeekFront(i)));
-            //if ( ( a - b ) * c ) { return 1 + 2 + d ; }")
-            if (PeekFront(i) == type) {
-                tokenCounter()->PushToBracketOrBraceStack(type);
-            } else if (tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(PeekFront(i))) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
-    };
-    auto PermanentConditionCallableForBraces = [&](TokenType type = TokenType::L_BRACE)->int {
-        if (PeekFront(0)==TokenType::R_PARENTHESES)
-            Consume();
-
-        tokenCounter()->PushToBracketOrBraceStack(type);
-
-        Consume();
-
-        int i = 0;
-
-        while (PeekFront(i++) != TokenType::END_OF_STREAM) {
-            if (PeekFront(i) == type) {
-                tokenCounter()->PushToBracketOrBraceStack(type);
-            }
-            if (tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(PeekFront(i))) {
-                return i;
-            }
-        }
-        VERIFY_NOT_REACHED();
-    };
-    NewStatement->PushTestTokens(ConsumeSpecificSpan(
-    [&]()->void {
-        ExpectToken(TokenType::L_PARENTHESES);
-        ExpectTokenAtAnywhere(TokenType::R_PARENTHESES);
-    }, PermanentConditionCallableForParentheses
-    ).value());
-
-        NewStatement->PushConseqTokens(ConsumeSpecificSpan([&]()->void {
-            ExpectToken(TokenType::L_BRACE);
-            ExpectTokenAtAnywhere(TokenType::R_BRACE);
-        },PermanentConditionCallableForBraces
-        ).value());
-
-        if (PeekFront(1) == TokenType::ELSE) {
-            Consume();
-            NewStatement->ApproveAlternateToken(ConsumeSpecificSpan([&]()->void {
-                ExpectToken(TokenType::L_BRACE);
-                ExpectTokenAtAnywhere(TokenType::R_BRACE);
-            },PermanentConditionCallableForBraces).value());
-        }
-            return NewStatement;
+        Context()->SyntacticValidator()->Expect(TokenType::L_BRACKET);
+    return NewStatement;
 }
     WhileStatement* Parser::CreateNewWhileStatement() {
 
     }
 
 
+
+
     BinaryOpStatement* Parser::CreateNewBinaryOpStatement() {
-    auto NewStatement = BinaryOpStatement::Create();
-
-    if (!(PeekFront(0) == TokenType::L_PARENTHESES))
-        NewStatement->AddToChain(GetPreviousTokenWithoutGoingBack());
-
-
-
-    while (PeekFront(0) == TokenType::NUMERIC       ||
-           PeekFront(0) == TokenType::IDENTIFIER    ||
-           PeekFront(0) == TokenType::BINARY_OP     ||
-           PeekFront(0) == TokenType::L_PARENTHESES ||
-           PeekFront(0) == TokenType::R_PARENTHESES)
-            {
-
-                if (PeekFront(0) == TokenType::L_PARENTHESES) {
-                    tokenCounter()->PushToBracketOrBraceStack(TokenType::L_PARENTHESES);
-                    NewStatement->AddToChain(Consume());
-                    if (PeekHind(1)==TokenType::NUMERIC)
-                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
-                    if (PeekFront(1) == TokenType::BINARY_OP     &&
-                        !(tokenCounter()->Peek(1)->Lexeme == "+" ||
-                        tokenCounter()->Peek(1)->Lexeme == "-" ))
-                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
-                    if (tokenCounter()->Peek(1)->Lexeme == "+" ||
-                        tokenCounter()->Peek(1)->Lexeme == "-" )
-
-                    continue;
-                }
-
-                if (PeekFront(0) == TokenType::R_PARENTHESES) {
-                    if (!tokenCounter()->CheckIfRightBracketOrBraceProperAndPairThem(TokenType::R_PARENTHESES))
-                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
-                    if (!(PeekFront(0) == TokenType::BINARY_OP || PeekFront(0) == TokenType::R_PARENTHESES))
-                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
-                    if (!(PeekHind(1) == TokenType::IDENTIFIER || PeekHind(1) == TokenType::NUMERIC))
-                        VERIFY_NOT_REACHED(); //TODO: throw exception via SemanticError object
-                    NewStatement->AddToChain(Consume());
-                    continue;
-                }
-
-                if (PeekFront(0) == TokenType::BINARY_OP) {
-                    NewStatement->AddToChain(Consume());
-                    if ((tokenCounter()->Peek(0)->Lexeme == "+" ||
-                        tokenCounter()->Peek(0)->Lexeme == "-") &&
-                        (tokenCounter()->Peek(1)->Type == TokenType::NUMERIC ||
-                        tokenCounter()->Peek(1)->Type == TokenType::IDENTIFIER)) {
-                        NewStatement->AddToChain(Consume());
-                        continue;
-                    }
-                }
-                if ((PeekFront(0) == TokenType::IDENTIFIER || PeekFront(0) == TokenType::NUMERIC)) {
-                    NewStatement->AddToChain(Consume());
-                }
-            }
+        auto NewStatement = BinaryOpStatement::Create();
             return NewStatement;
         };
-        ASTNode* Parser::RecognizeStatementOrRedirectNode(std::optional<std::vector<Token>>& tokens, ParserContext* context) {
+        ASTNode* Parser::RecognizeStatementOrRedirectNode(ErrorOr<std::vector<Token>> tokens, ParserContext* context) {
 
             context->PushCallStack(FUNCTION_NAME());
 
-            VERIFY_ONCE(!tokens,"Tokens should not provided at first");
+            VERIFY_ONCE(!tokens.value().empty(),"Tokens should not provided at first");
 
-            if (!tokens) {
+            if (!tokens.value().empty()) {
                 m_CurrentTokenCounter = m_MajorTokenCounter;
             } else {
                 m_MinorTokenCounter = MinorTokenCounter::Create();
@@ -149,7 +50,6 @@ IfStatement* Parser::CreateNewIfStatement() {
 
             ASTNode* RetValue;
             TokenType debugType;
-            BinaryOpStatement* binaryOpStatement;
 
         while (PeekFront(0) != TokenType::END_OF_STREAM) {
 
@@ -162,8 +62,14 @@ IfStatement* Parser::CreateNewIfStatement() {
                     Consume();
                     RetValue = StatementParser(CreateNewIfStatement(), context);
                     break;
-                case TokenType::L_PARENTHESES:
+                case TokenType::L_BRACE:
+
+                case TokenType::L_BRACKET:
                     case TokenType::BINARY_OP:
+                    if (Context()->isThereAnyWaitingStatement()) {
+                        Context()->PushSendingStack(CreateNewBinaryOpStatement());
+                        continue;
+                    }
                     RetValue = StatementParser(CreateNewBinaryOpStatement(), context);
                     break;
                 case TokenType::CLASS:
@@ -179,12 +85,26 @@ IfStatement* Parser::CreateNewIfStatement() {
                     //StatementParser(std::move(*new Statement));
                 break;
                 case TokenType::RETURN:
-                    Consume();
+                    CreateNewReturnStatement();
                     break;
                 case TokenType::IDENTIFIER:
                 case TokenType::NUMERIC:
-                    if (DecideIfSingleTokenStatement())
-                        VERIFY_NOT_REACHED();
+                    if (DecideIfSingleTokenStatement()) {
+                        auto NewStatement = SingleTokenStatement::Create(Consume());
+                        DispatchWaitingStatement(Context()->RedirectWaitingStatement(),
+                                                NewStatement);
+                    }
+                    Consume();
+                    break;
+                case TokenType::R_BRACKET:
+                case TokenType::SEMICOLON:
+                    if (Context()->isThereAnyWaitingStatement()) {
+                        auto WaitingStatement = Context()->RedirectWaitingStatement();
+                        DispatchWaitingStatement(WaitingStatement,
+                                                Context()->SendStatement());
+                        RetValue = StatementParser(WaitingStatement, context);
+                    }
+
                     Consume();
                     break;
                 default:
@@ -224,14 +144,16 @@ IfStatement* Parser::CreateNewIfStatement() {
 }
 
 
-template <CallableReturnsInt T, CallableReturnsVoid F>
-std::optional<std::vector<Token>> Parser::ConsumeSpecificSpan(F&& StartingCondition, T&& PermanentCondition) {
+template <Callable F>
+std::optional<std::vector<Token>> Parser::ConsumeSpecificSpan(F&& IndexOfLastTokenToConsumeCallable, ParserContext *context) {
 
-            std::vector<Token> TokenList;
-            StartingCondition();
-            int i = PermanentCondition();
+            auto TokenList = *new std::vector<Token>();
 
-            while (i-- > 0)
+            TRY_FOR_VOID(Context()->SyntacticValidator()->Expect(TokenType::L_BRACKET));
+
+            auto idx = TRY(IndexOfLastTokenToConsumeCallable());
+
+            while (idx-- > 0)
                 TokenList.push_back(Consume());
 
             return std::move(*new std::optional(TokenList));
@@ -274,28 +196,14 @@ TokenType Parser::PeekHind(int Distance){
         return *tokenCounter()->Peek(Distance);
     }
 
-bool Parser::ExpectToken (TokenType TokenTypeToExpect) {
-    if (PeekFront(0) == TokenTypeToExpect)
-        return true;
-    return false;
-    };
-
-bool Parser::ExpectTokenAtAnywhere (TokenType TokenTypeToExpect) {
-    int pos = 0;
-    while (PeekFront(pos) != TokenType::END_OF_STREAM)
-        if (PeekFront(pos++) == TokenTypeToExpect)
-            return true;
-    return false;
-}
-
     bool Parser::DecideIfSingleTokenStatement() { //burası multithread olabilir
-    if (PeekHind(1) == TokenType::L_PARENTHESES && PeekFront(1) == TokenType::R_PARENTHESES)
+    if (PeekHind(1) == TokenType::L_BRACKET && PeekFront(1) == TokenType::R_BRACKET)
         return true;
     if (PeekHind(1) == TokenType::L_BRACE && PeekFront(1) == TokenType::R_BRACE)
         return true;
-    if (PeekFront(1) == TokenType::SEMICOLON || PeekFront(1) == TokenType::COMMA)
+    if (PeekFront(1) == TokenType::COLON || PeekFront(1) == TokenType::COMMA)
         return true;
-    if (PeekHind(1) == TokenType::END_OF_STATEMENT && PeekFront(1) == TokenType::END_OF_STATEMENT)
+    if (PeekHind(1) == TokenType::SEMICOLON && PeekFront(1) == TokenType::SEMICOLON)
         return true;
     return false;
 }

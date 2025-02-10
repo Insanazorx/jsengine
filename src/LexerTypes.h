@@ -15,12 +15,17 @@ namespace JSLib {
         SWITCH, THIS, IMPORT, FROM,
         AS,UNARY_OP, VAR,LET, FUNCTION,
         ELSE, L_BRACE, STRING,
-        END_OF_STREAM, SEMICOLON, COMMA,
+        END_OF_STREAM, COLON, COMMA,
         DOT, AWAIT, ASYNC, GENERATOR_FUNCTION,
-        R_BRACE, L_PARENTHESES, R_PARENTHESES,
+        R_BRACE, L_BRACKET, R_BRACKET,
         RETURN, CLASS, NUMERIC,
-        IDENTIFIER, INVALID, END_OF_STATEMENT,
+        IDENTIFIER, INVALID, SEMICOLON,
         START_OF_SCOPE, END_OF_SCOPE
+    };
+
+    struct TokenPosition {
+        int Line {0};
+        int Pos {0};
     };
 
     struct Token {
@@ -30,22 +35,16 @@ namespace JSLib {
         TokenType Type;
         std::string Lexeme;
         bool Analyzed {false};
-        int Line {0};
-        int Pos {0};
+        TokenPosition Position;
 
         Token(const Token& other) {
             Type = other.Type;
             Lexeme = other.Lexeme;
             Analyzed = other.Analyzed;
-            Line = other.Line;
-            Pos = other.Pos;
+            Position = other.Position;
         }
-        void operator=(const Token& other) {
-            Type = other.Type;
-            Lexeme = other.Lexeme;
-            Analyzed = other.Analyzed;
-            Line = other.Line;
-            Pos = other.Pos;
-        }
+
+        Token& operator=(const Token& other) = default;
+
     };
 }

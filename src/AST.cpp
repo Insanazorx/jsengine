@@ -6,23 +6,47 @@
 #include <unordered_map>
 
 namespace JSLib {
+
+    NodeBranchInfo* ReturnStatement::ParseTokens(ParserContext* context) {
+        context->PushCallStack(FUNCTION_NAME());
+
+        auto NewInfo = NodeBranchInfo::Create();
+
+        auto& ConsequentTokens = *new std::optional(this->GetConsequentExpr()->GetTokenChain());
+
+        Token EosToken = *new Token();
+        EosToken.Type = TokenType::END_OF_STREAM;
+
+        ConsequentTokens.value().push_back(EosToken);
+
+        ASTNode* ConsequentNode = nullptr;
+
+        ConsequentNode = Parser::Instance()->RecognizeStatementOrRedirectNode(ConsequentTokens, context);
+
+        auto NewNode = ReturnNode::Create();
+        NewNode->SetValue("return");
+
+        NewInfo->SetNode(NewNode);
+
+        NewInfo->Node()->SetConsequentNode(ConsequentNode);
+
+        const auto Dump = NewInfo->Node()->toJson().dump(4);
+
+        std::cout << "-------------------" << "ReturnStatement::ParseTokens" << "-------------------"<< std::endl;
+        std::cout << Dump << std::endl;
+        std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
+        context->PopCallStack();
+        return NewInfo;
+    }
+
+
     NodeBranchInfo* IfStatement::ParseTokens(ParserContext* context) {
         context->PushCallStack(FUNCTION_NAME());
 
         auto NewInfo = NodeBranchInfo::Create();
 
-        auto& TestTokens =*new std::optional<std::vector<Token>>(this->GetTestTokens());
-        auto& ConsequentTokens = *new std::optional<std::vector<Token>>(this->GetConseqTokens());
-        auto& AlternateTokens = *new std::optional<std::vector<Token>> (this->GetAlternateTokens());
+        auto MaybeTestTokens = TRY(this->TestExpr()->MakeTokenVector());
 
-        Token EosToken = *new Token();
-        EosToken.Type = TokenType::END_OF_STREAM;
-
-        TestTokens.value().push_back(EosToken);
-        ConsequentTokens.value().push_back(EosToken);
-
-        if (AlternateTokens)
-            AlternateTokens.value().push_back(EosToken);
 
         static bool AnalyzedThisDepth = false;
         ASTNode* TestNode = nullptr;
@@ -30,7 +54,7 @@ namespace JSLib {
         ASTNode* AlternateNode = nullptr;
 
         if (!AnalyzedThisDepth) { //burası multithread olabilir
-            TestNode = Parser::Instance()->RecognizeStatementOrRedirectNode(TestTokens, context);
+            TestNode = Parser::Instance()->RecognizeStatementOrRedirectNode(MaybeTestTokens.value(), context);
 
             VERIFY(TestNode,"TestNode returned nullptr");
 
@@ -46,7 +70,22 @@ namespace JSLib {
             AnalyzedThisDepth = true;
         }
 
+        auto NewNode = IfNode::Create();
+        NewNode->SetValue("if");
 
+        NewInfo->SetNode(NewNode);
+
+        NewInfo->Node()->SetTestNode(TestNode);
+        NewInfo->Node()->SetConsequentNode(ConsequentNode);
+
+        if (AlternateTokens)
+            NewInfo->Node()->SetAlternateNode(AlternateNode);
+
+        auto Dump = NewInfo->Node()->toJson().dump(4);
+
+        std::cout << "-------------------" << "IfStatement::ParseTokens" << "-------------------"<< std::endl;
+        std::cout << Dump << std::endl;
+        std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
         context->PopCallStack();
         return NewInfo;
     }
@@ -130,8 +169,8 @@ namespace JSLib {
         OperationTypeMap["<"] = BinaryOpSubType::LESS_THAN;
         OperationTypeMap[">="] = BinaryOpSubType::GREATER_OR_EQUAL;
         OperationTypeMap["<="] = BinaryOpSubType::LESS_OR_EQUAL;
-        OperationTypeMap["("] = BinaryOpSubType::L_PARENTHESES;
-        OperationTypeMap[")"] = BinaryOpSubType::R_PARENTHESES;
+        OperationTypeMap["("] = BinaryOpSubType::L_BRACKET;
+        OperationTypeMap[")"] = BinaryOpSubType::R_BRACKET;
 
 
         auto& InfixTokens = this->GetTokenChain();
@@ -209,13 +248,13 @@ namespace JSLib {
                 OperatorStack().Push(token);
                 continue;
             }
-            if (token.Type == TokenType::L_PARENTHESES) {
+            if (token.Type == TokenType::L_BRACKET) {
                 OperatorStack().Push(token);
                 continue;
             }
 
-            if (token.Type == TokenType::R_PARENTHESES) {
-                while (OperatorStack().Peek().Type != TokenType::L_PARENTHESES) {
+            if (token.Type == TokenType::R_BRACKET) {
+                while (OperatorStack().Peek().Type != TokenType::L_BRACKET) {
                     PostfixTokens->push_back(OperatorStack().Pop());
                 }
                 OperatorStack().Pop(); //pop the left parentheses

@@ -79,13 +79,13 @@ namespace JSLib {
             TokenTypeMap["function*"] = TokenType::GENERATOR_FUNCTION;
             TokenTypeMap["of"] = TokenType::OF;
             TokenTypeMap["in"] = TokenType::IN;
-            TokenTypeMap["("] = TokenType::L_PARENTHESES;
-            TokenTypeMap[")"] = TokenType::R_PARENTHESES;
+            TokenTypeMap["("] = TokenType::L_BRACKET;
+            TokenTypeMap[")"] = TokenType::R_BRACKET;
             TokenTypeMap["{"] = TokenType::L_BRACE;
             TokenTypeMap["}"] = TokenType::R_BRACE;
-            TokenTypeMap[";"] = TokenType::END_OF_STATEMENT;
+            TokenTypeMap[";"] = TokenType::SEMICOLON;
             TokenTypeMap[","] = TokenType::COMMA;
-            TokenTypeMap[":"] = TokenType::SEMICOLON;
+            TokenTypeMap[":"] = TokenType::COLON;
             TokenTypeMap["."] = TokenType::DOT;
         } ;
 

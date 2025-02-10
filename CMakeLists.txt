@@ -20,10 +20,12 @@ add_executable(js src/main.cpp
         src/Context.h
         src/Util.h
         src/Visitor.h
-        src/SyntaxValidator.h
-        src/SyntaxValidator.cpp
+        src/Validator.h
+        src/Validator.cpp
         src/SourceCode.h
-        src/SourceCode.cpp)
+        src/SourceCode.cpp
+        src/ErrorOr.h
+        src/Forward.h)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

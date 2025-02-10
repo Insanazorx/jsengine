@@ -6,11 +6,11 @@
 
 namespace JSLib {
     enum class StatementType{
-        PROGRAM, IF_STATEMENT, FOR_STATEMENT,
+        PROGRAM, IF_STATEMENT, FOR_STATEMENT, RETURN_STATEMENT,
         WHILE_STATEMENT, SWITCH_CASE_STATEMENT,IMMEDIATE_STATEMENT,
         BINARY_OP_STATEMENT,VARIABLE_STATEMENT, UNARY_OP_STATEMENT,
         ASSIGNMENT_STATEMENT,FUNCTION_STATEMENT, CLASS_STATEMENT,
-        VARIABLE_DECLARATION_STATEMENT, BOOL_STATEMENT,
+        VARIABLE_DECLARATION_STATEMENT, BOOL_STATEMENT, BRACKET_STATEMENT,
         ANY_OF_STATEMENT_TYPES,INVALID_STATEMENT
     };
     enum class BinaryOpSubType {
@@ -22,7 +22,7 @@ namespace JSLib {
         IS_EQUAL, IS_NOT_EQUAL, IS_STRICTLY_EQUAL, IS_NOT_STRICTLY_EQUAL,
         BITWISE_OR , BITWISE_XOR, BITWISE_AND,
         LOGICAL_OR, LOGICAL_AND,
-        L_PARENTHESES, R_PARENTHESES
+        L_BRACKET, R_BRACKET
     };
 
     inline std::string StringifyBinaryOpSubType(BinaryOpSubType type) {
@@ -73,10 +73,10 @@ namespace JSLib {
                 return "LOGICAL_OR";
             case BinaryOpSubType::LOGICAL_AND:
                 return "LOGICAL_AND";
-            case BinaryOpSubType::L_PARENTHESES:
-                return "L_PARENTHESES";
-            case BinaryOpSubType::R_PARENTHESES:
-                return "R_PARENTHESES";
+            case BinaryOpSubType::L_BRACKET:
+                return "L_BRACKET";
+            case BinaryOpSubType::R_BRACKET:
+                return "R_BRACKET";
             default:
                 VERIFY_NOT_REACHED();
         }
@@ -116,8 +116,8 @@ namespace JSLib {
             case BinaryOpSubType::LOGICAL_OR:
             case BinaryOpSubType::LOGICAL_AND:
                 return 2;
-            case BinaryOpSubType::L_PARENTHESES:
-            case BinaryOpSubType::R_PARENTHESES:
+            case BinaryOpSubType::L_BRACKET:
+            case BinaryOpSubType::R_BRACKET:
                 return 0xFFFF;
             default:
                 VERIFY_NOT_REACHED();

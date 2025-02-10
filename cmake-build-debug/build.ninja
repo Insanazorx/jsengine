@@ -77,8 +77,8 @@ build CMakeFiles/js.dir/src/Parser.cpp.o: CXX_COMPILER__js_unscanned_Debug /User
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src
 
-build CMakeFiles/js.dir/src/SyntaxValidator.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/SyntaxValidator.cpp || cmake_object_order_depends_target_js
-  DEP_FILE = CMakeFiles/js.dir/src/SyntaxValidator.cpp.o.d
+build CMakeFiles/js.dir/src/Validator.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/Validator.cpp || cmake_object_order_depends_target_js
+  DEP_FILE = CMakeFiles/js.dir/src/Validator.cpp.o.d
   FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
@@ -99,7 +99,7 @@ build CMakeFiles/js.dir/src/SourceCode.cpp.o: CXX_COMPILER__js_unscanned_Debug /
 #############################################
 # Link the executable js
 
-build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/AST.cpp.o CMakeFiles/js.dir/src/Lexer.cpp.o CMakeFiles/js.dir/src/Parser.cpp.o CMakeFiles/js.dir/src/SyntaxValidator.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd
+build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/AST.cpp.o CMakeFiles/js.dir/src/Lexer.cpp.o CMakeFiles/js.dir/src/Parser.cpp.o CMakeFiles/js.dir/src/Validator.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd
   FLAGS = -w -g -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk
   LINK_LIBRARIES = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd
   OBJECT_DIR = CMakeFiles/js.dir

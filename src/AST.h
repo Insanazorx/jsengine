@@ -8,9 +8,12 @@
 #include "Visitor.h"
 #include "Context.h"
 #include "Util.h"
+#include "Validator.h"
+#include "Forward.h"
 
 
 namespace JSLib {
+    class Validator;
     class ASTVisitor;
 
     class Statement;
@@ -18,7 +21,7 @@ class NodeBranchInfo;
 class ASTBuilder;
 class ASTNode;
 class ParserContext;
-class Parser;;
+class Parser;
     class Node;
 
 class Statement{
@@ -27,69 +30,92 @@ protected:
 public:
     virtual ~Statement() = default;
     static Statement* Create() {return new Statement();}
+
+    virtual TokenPosition Validate(Validator&) {return {-1,-1}; }
+
     virtual StatementType Type() {return m_Type;}
     virtual NodeBranchInfo* ParseTokens(ParserContext* context) {};
     virtual ASTNode* GenerateASTImmediate(ParserContext* context) {return nullptr;}
+
+    virtual void SetInitExpr(ImmediateStatement *expression) {}
+    virtual void SetUpdateExpr(Statement* expression) {}
+    virtual void SetTestExpr(ImmediateStatement *expression) {}
+    virtual void SetConsequentExpr(Statement* expression) {}
+    virtual void SetConsequentImm(ImmediateStatement* expression) {}
+    virtual void SetAlternateExpr(Statement* expression) {}
+
+    virtual ImmediateStatement* TestExpr() {return nullptr;}
+    virtual ImmediateStatement* ConsequentImm() {return nullptr;}
+    virtual Statement* ConsequentExpr() {return nullptr;}
+    virtual Statement* AlternateExpr() {return nullptr;}
+    virtual Statement* InitExpr() {return nullptr;}
+    virtual Statement* UpdateExpr() {return nullptr;}
+
     Statement(const Statement& other) {
         m_Type = other.m_Type;
         isAnalyzeSet = other.isAnalyzeSet;
         m_Type = other.m_Type;
     }
     virtual bool isImmediate(){return false;}
-    std::vector<Token>& GetTokenChain() {return m_TokenChain;}
+
+    void awaitExpression(ParserContext* context) {
+        context->PushToWaitingStack(this);
+    }
+
 protected:
-    std::vector<Token> m_TokenChain;
     bool isAnalyzeSet = false;
     StatementType m_Type;
 };
 
-class ProgramStatement : public Statement{
+class ScopeStatement final : public Statement {
 friend class Statement;
 private:
-    ProgramStatement() {};
-    ~ProgramStatement() override = default;
+    ScopeStatement() = default;
 public:
-    static ProgramStatement* Create() {
-        return new ProgramStatement();
-    }
+    static ScopeStatement* Create() {return new ScopeStatement();}
+    ~ScopeStatement() override = default;
+    NodeBranchInfo* ParseTokens(ParserContext* context) override {}
 private:
     std::vector<Statement*> m_Statements;
 };
 
-class ScopeStatement final : public Statement {
-friend class Statement;
-public:
-    ScopeStatement(Token start, Token end, StatementType type) : m_Start(start), m_End(end), m_ParentType(type) {}
-    ~ScopeStatement() override = default;
-    NodeBranchInfo* ParseTokens(ParserContext* context) override {}
-private:
-    Token m_Start;
-    Token m_End;
-    StatementType m_ParentType;
-};
-
-class IfStatement : public Statement {
+    class IfStatement : public Statement {
 friend class Statement;
 private:
     IfStatement() = default;
 public:
     ~IfStatement() override = default;
     static IfStatement* Create() {return new IfStatement();}
-    IfStatement* PushTestTokens(std::vector<Token>&& tokens) {for (auto token: tokens) m_TestTokens.push_back(token);return this;};
-    IfStatement* PushConseqTokens(std::vector<Token>&& tokens) {for (auto token: tokens) m_ConsequentTokens.push_back(token);return this;};
-    IfStatement* ApproveAlternateToken(std::vector<Token>&& tokens) {for (auto token: tokens) m_AlternateTokens.push_back(token);return this;};
-    std::vector<Token>& GetTestTokens() {return m_TestTokens;}
-    std::vector<Token>& GetConseqTokens() {return m_ConsequentTokens;}
-    std::vector<Token>& GetAlternateTokens() {return m_AlternateTokens;}
 
-    NodeBranchInfo* ParseTokens(ParserContext* context);
+    void SetTest(ImmediateStatement* test) {m_test = test;}
+    void SetConsequent(Statement* consequent) {m_consequent = consequent;}
+    void SetAlternate(Statement* alternate) {m_alternate = alternate;}
+
+    ImmediateStatement* Test() {return m_test;}
+    Statement* Consequent() {return m_consequent;}
+    Statement* Alternate() {return m_alternate;}
+
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+
+    NodeBranchInfo* ParseTokens(ParserContext* context) override;
     StatementType Type() override {return StatementType::IF_STATEMENT;}
 
 private:
-    std::vector<Token> m_TestTokens;
-    std::vector<Token> m_ConsequentTokens;
-    std::vector<Token> m_AlternateTokens;
+    ImmediateStatement* m_test {nullptr};
+    Statement* m_consequent {nullptr};
+    Statement* m_alternate {nullptr};
 };
+
+    class ParanthesesStatement : public Statement {
+    private:
+        ParanthesesStatement() = default;
+    public:
+        ~ParanthesesStatement() override = default;
+        static ParanthesesStatement* Create() {return new ParanthesesStatement();}
+        NodeBranchInfo* ParseTokens(ParserContext* context) override {}
+        StatementType Type() override {return StatementType::BRACKET_STATEMENT;}
+    };
+
 
 class ImmediateStatement : public Statement {
 friend class Statement;
@@ -99,13 +125,15 @@ public:
     ~ImmediateStatement() override = default;
     static ImmediateStatement* Create() {return new ImmediateStatement();}
 
-    virtual ImmediateStatement* AddToChain(Token TokenToAdd) {m_TokenChain.push_back(TokenToAdd); return this;};
+    virtual void SetLhs (ImmediateStatement* lhs) {}
+    virtual void SetRhs (ImmediateStatement* rhs) {}
+
     NodeBranchInfo* ParseTokens(ParserContext* context) override {};
     bool isImmediate() override {return true;}
     ASTNode* GenerateASTImmediate(ParserContext* context) {};
-
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+    virtual ErrorOr<std::vector<Token>> MakeTokenVector() {}
 };
-
 
 class UnaryOpStatement final : public ImmediateStatement {
 private:
@@ -115,6 +143,12 @@ public:
     static UnaryOpStatement* Create() {return new UnaryOpStatement;}
     StatementType Type() override {return StatementType::UNARY_OP_STATEMENT;}
     ASTNode* GenerateASTImmediate(ParserContext* context) {}
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+
+private:
+    ImmediateStatement* m_expression {nullptr};
+    Token* m_op {nullptr};
+
 };
 
 class AssignmentStatement final : public ImmediateStatement {
@@ -122,9 +156,12 @@ private:
     AssignmentStatement() = default;
 public:
     ~AssignmentStatement() override = default;
-    static AssignmentStatement* TryToCreate(std::vector<Token>) {return new AssignmentStatement();}//TODO
     StatementType Type() override {return StatementType::ASSIGNMENT_STATEMENT;}
-    ASTNode* GenerateASTImmediate(ParserContext* context) {}
+    ASTNode* GenerateASTImmediate(ParserContext* context) override;
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+private:
+    ImmediateStatement* m_lvalue {nullptr};
+    ImmediateStatement* m_rvalue {nullptr};
 };
 
 class VariableDeclarationStatement : public ImmediateStatement {
@@ -135,6 +172,9 @@ public:
     static VariableDeclarationStatement* Create(){return new VariableDeclarationStatement();}
     StatementType Type() override {return StatementType::VARIABLE_DECLARATION_STATEMENT;}
     ASTNode* GenerateASTImmediate(ParserContext* context) {}
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+private:
+    Statement* m_variable {nullptr};
 };
 
 
@@ -144,11 +184,28 @@ private:
 public:
     ~BinaryOpStatement() override = default;
     static BinaryOpStatement* Create() {return new BinaryOpStatement();}
-    std::vector<Token>& GetTokenChain() {return m_TokenChain;}
-    StatementType Type() override {return StatementType::BINARY_OP_STATEMENT;}
-    ASTNode* GenerateASTImmediate(ParserContext* context);
 
+    StatementType Type() override {return StatementType::BINARY_OP_STATEMENT;}
+    ASTNode* GenerateASTImmediate(ParserContext* context) override;
+
+    ErrorOr<std::vector<Token>> MakeTokenVector() override;
+
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+
+    ImmediateStatement* m_lhs {nullptr};
+    Token m_op {};
+    Statement* m_rhs {nullptr};
 };
+
+    class SingleTokenStatement : public ImmediateStatement {
+    private:
+        SingleTokenStatement(Token token) : m_Token(token){};
+    public:
+        ~SingleTokenStatement() override = default;
+        static SingleTokenStatement* Create(Token token) {return new SingleTokenStatement(token);}
+    private:
+        Token m_Token;
+    };
 
 
 class ForStatement : public Statement {
@@ -159,23 +216,20 @@ public:
     ~ForStatement() override = default;
 
     static ForStatement* Create() {return new ForStatement();}
-    ForStatement* PushInitialConditionTokens(std::vector<Token> tokens) {for (auto token: tokens) m_InitialConditionTokens.push_back(token);return this;}
-    ForStatement* PushTestTokens(std::vector<Token> tokens) {for (auto token: tokens) m_TestTokens.push_back(token);return this;}
-    ForStatement* PushIterationTokens(std::vector<Token> tokens) {for (auto token: tokens) m_IterationTokens.push_back(token);return this;}
-    ForStatement* PushConseqTokens(std::vector<Token> tokens) {for (auto token: tokens) m_ConsequentTokens.push_back(token);return this;}
-    std::vector<Token>& GetInitialConditionTokens() {return m_InitialConditionTokens;}
-    std::vector<Token>& GetTestTokens() {return m_TestTokens;}
-    std::vector<Token>& GetIterationTokens() {return m_IterationTokens;}
-    std::vector<Token>& GetConseqTokens() {return m_ConsequentTokens;}
 
+    void SetInit(Statement* init) {m_init = init;}
+    void SetTest(Statement* test) {m_test = test;}
+    void SetUpdate(Statement* update) {m_update = update;}
+    void SetBody(Statement* body) {m_body = body;}
 
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     NodeBranchInfo* ParseTokens(ParserContext* context);
     StatementType Type() override {return StatementType::FOR_STATEMENT;}
 private:
-    std::vector<Token> m_InitialConditionTokens;
-    std::vector<Token> m_TestTokens;
-    std::vector<Token> m_IterationTokens;
-    std::vector<Token> m_ConsequentTokens;
+    Statement* m_init {nullptr};
+    Statement* m_test {nullptr};
+    Statement* m_update {nullptr};
+    Statement* m_body {nullptr};
 };
 
 class WhileStatement final : public Statement {
@@ -187,9 +241,10 @@ public:
     static WhileStatement* Create() {return new WhileStatement();}
     NodeBranchInfo* ParseTokens (ParserContext* context) override {}
     StatementType Type() override {return StatementType::WHILE_STATEMENT;}
+    TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
 private:
-    std::vector<Token> m_TestTokens;
-    std::vector<Token> m_ConsequentTokens;
+    Statement* m_test {nullptr};
+    Statement* m_body {nullptr};
 };
 
     class FunctionStatement : public Statement {
@@ -200,10 +255,46 @@ private:
         static FunctionStatement* Create() {
             return new FunctionStatement;
         }
+
+        void AddArgument(SingleTokenStatement* argument) {m_arguments.push_back(argument);}
+        void AddBodyStatement(Statement* statement) {m_body_statements.push_back(statement);}
+        void SetReturnStatement(Statement* statement) {m_return_statement = statement;}
+
+        std::vector<SingleTokenStatement*> Arguments() {return m_arguments;}
+        std::vector<Statement*> BodyStatements() {return m_body_statements;}
+        Statement* ReturnStatement() {return m_return_statement;}
+
+        TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
         NodeBranchInfo* ParseTokens (ParserContext* context) override {}
         StatementType Type() override {return StatementType::FUNCTION_STATEMENT;}
-    }
-    ;
+
+    private:
+        std::vector<SingleTokenStatement*> m_arguments {nullptr};
+        std::vector<Statement*> m_body_statements {};
+        Statement* m_return_statement {nullptr};
+
+    };
+
+    class ReturnStatement : public Statement {
+    private:
+        ReturnStatement() = default;
+    public:
+        ~ReturnStatement() override = default;
+        static ReturnStatement* Create() {
+            return new ReturnStatement();
+        }
+        NodeBranchInfo* ParseTokens (ParserContext* context) override;
+        StatementType Type() override {return StatementType::RETURN_STATEMENT;}
+
+        TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
+
+        void SetConsequentImm (ImmediateStatement* expression) override {m_expression = expression;}
+        ImmediateStatement* ConsequentImm() override {return m_expression;}
+
+    private:
+        ImmediateStatement* m_expression {nullptr};
+
+    };
 
     class ASTNode {
     protected:
@@ -227,6 +318,11 @@ private:
             return jsonObj;
         }
 
+        virtual TokenPosition Validate(Validator& validator) {return {-1,-1};}
+
+        virtual void SetTestNode(ASTNode* testNode) {}
+        virtual void SetConsequentNode(ASTNode* consequentNode) {}
+        virtual void SetAlternateNode(ASTNode* alternateNode) {}
         virtual ASTNode* Lhs() {}
         virtual ASTNode* Rhs() {}
         virtual void RemoveLhs() {}
@@ -289,7 +385,7 @@ public:
     void SetNode(ASTNode* node) {m_node = node;}
 private:
     ASTNode* m_node;
-    int m_tokenIndex {0};
+    TokenPosition m_Position;
 };
 
 
@@ -299,9 +395,14 @@ public:
     static ScopeNode* Create(){
         return new ScopeNode();
     }
-    ~ScopeNode() = default;
+    ~ScopeNode() override = default;
 
     bool isScopeNode() override {return true;}
+
+    void AddChild(ASTNode* child) {
+        m_Children.push_back(child);
+    }
+
 
 private:
     std::vector<ASTNode*> m_Children;
@@ -408,13 +509,36 @@ public:
         return new IfNode();
     }
 
+    void SetAlternatePresent() {isAlternatePresent = true;}
+    void SetTestNode(ASTNode* TestNode) override {Condition = TestNode;}
+    void SetConsequentNode(ASTNode* ConsequentNode) {Consequent = ConsequentNode;}
+    void SetAlternateNode(ASTNode* AlternateNode) {Alternate = AlternateNode;}
+
+    ASTNode* TestNode() {return Condition;}
+    ASTNode* ConsequentNode() {return Consequent;}
+    ASTNode* AlternateNode() {return Alternate;}
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["raw"] = Raw();
+        jsonObj["condition"] = Condition->toJson();
+        jsonObj["consequent"] = Consequent->toJson();
+        if (isAlternatePresent)
+            jsonObj["alternate"] = Alternate->toJson();
+        return jsonObj;
+    }
+
+    bool isIfNode() override {return true;}
+
+    ~IfNode() override = default;
 private:
     IfNode() = default;
-    ~IfNode() = default;
 private:
     ASTNode* Condition;
     ASTNode* Consequent;
     ASTNode* Alternate;
+
+    bool isAlternatePresent {false};
 
 };
 class ForNode : public ASTNode {
@@ -438,20 +562,38 @@ private:
     ~WhileNode() = default;
 };
 
-    class ReturnNode : public ASTNode {};
+    class ReturnNode : public ASTNode {
+    private:
+        ReturnNode() = default;
+    public:
+        ~ReturnNode() = default;
+        static ReturnNode* Create() {
+            return new ReturnNode();
+        }
+        nlohmann::json toJson() override {
+            nlohmann::json jsonObj;
+            jsonObj["raw"] = Raw();
+            if (m_expr)
+                jsonObj["returned_expression"] = m_expr->toJson();
+            return jsonObj;
+        }
+        bool isReturnNode() override {return true;}
+        void SetConsequentNode(ASTNode* expr) override {m_expr = expr;}
+    private:
+        ASTNode* m_expr;
+    };
 
     class FunctionNode : public ASTNode {
         public:
         static FunctionNode* Create() {
             return new FunctionNode();
         }
-        ~FunctionNode() = default;
+        ~FunctionNode() override = default;
 
         private:
         FunctionNode() = default;
-        ScopeNode* m_FunctionScopeNode;
-        std::vector<VariableNode*> m_arguments;
-        std::vector<ASTNode*> m_children;
+        std::vector<VariableNode*> m_args;
+        ScopeNode* m_body;
     };
     class ASTVisitor : public Visitor {
 
