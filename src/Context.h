@@ -50,11 +50,21 @@ class Context{};
 
         Validator* SyntacticValidator() const {return m_syntax_validator;}
 
+        void PushScopeStatementBody(std::vector<Token> tokens) {m_ScopeStatementBodyStack.Push(tokens);}
+        std::vector<Token> PopScopeStatementBody() {return std::move(m_ScopeStatementBodyStack.Pop());}
+        std::vector<std::vector<Token>> MoveScopeStatementBodyToVariable() {
+            std::vector<std::vector<Token>> result;
+            for (auto tokenVector : m_ScopeStatementBodyStack.asVector()) {
+                result.push_back(std::move(tokenVector));
+            }
+            return result;
+        }
 
         void PushSendingStack(Statement* statement) {m_StatementStackToSendReceiver.Push(statement);}
         bool isThereAnySendingStatement() {return m_StatementStackToSendReceiver.Size() > 0;}
     private:
 
+        Stack<std::vector<Token>> m_ScopeStatementBodyStack;
         Stack<Statement*> m_StatementStackToSendReceiver;
         Stack<Statement*> m_WaitingReceiverStatementStack;
         Stack<std::string> m_MainCallStack;

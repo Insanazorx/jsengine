@@ -12,16 +12,16 @@ namespace JSLib {
 
         auto NewInfo = NodeBranchInfo::Create();
 
-        auto& ConsequentTokens = *new std::optional(this->GetConsequentExpr()->GetTokenChain());
+        auto MaybeConsequentTokens = TRY(this->ConsequentImm()->MakeTokenVector());
 
         Token EosToken = *new Token();
         EosToken.Type = TokenType::END_OF_STREAM;
 
-        ConsequentTokens.value().push_back(EosToken);
+        MaybeConsequentTokens.value().push_back(EosToken);
 
         ASTNode* ConsequentNode = nullptr;
 
-        ConsequentNode = Parser::Instance()->RecognizeStatementOrRedirectNode(ConsequentTokens, context);
+        ConsequentNode = Parser::Instance()->RecognizeStatementOrRedirectNode(MaybeConsequentTokens, context);
 
         auto NewNode = ReturnNode::Create();
         NewNode->SetValue("return");
@@ -43,32 +43,33 @@ namespace JSLib {
     NodeBranchInfo* IfStatement::ParseTokens(ParserContext* context) {
         context->PushCallStack(FUNCTION_NAME());
 
+        std::optional<std::vector<SyntaxError>> MaybeErrors = std::nullopt;
+
         auto NewInfo = NodeBranchInfo::Create();
 
         auto MaybeTestTokens = TRY(this->TestExpr()->MakeTokenVector());
 
 
-        static bool AnalyzedThisDepth = false;
+
+
+
+
+
+
+
+
+
+
+
         ASTNode* TestNode = nullptr;
-        ASTNode* ConsequentNode = nullptr;
-        ASTNode* AlternateNode = nullptr;
+        std::vector<ASTNode*> ConsequentNodes;
+        std::vector<ASTNode*> AlternateNodes;
 
-        if (!AnalyzedThisDepth) { //burası multithread olabilir
-            TestNode = Parser::Instance()->RecognizeStatementOrRedirectNode(MaybeTestTokens.value(), context);
 
-            VERIFY(TestNode,"TestNode returned nullptr");
+        VERIFY(TestNode,"TestNode returned nullptr");
 
-            ConsequentNode = Parser::Instance()->RecognizeStatementOrRedirectNode(ConsequentTokens, context);
 
-            VERIFY(ConsequentNode, "ConsequentNode returned nullptr");
 
-            if (AlternateTokens) {
-                AlternateNode = Parser::Instance()->RecognizeStatementOrRedirectNode(AlternateTokens, context);
-                VERIFY(AlternateNode, "AlternateNode returned nullptr");
-            }
-
-            AnalyzedThisDepth = true;
-        }
 
         auto NewNode = IfNode::Create();
         NewNode->SetValue("if");
@@ -90,58 +91,24 @@ namespace JSLib {
         return NewInfo;
     }
 
-    NodeBranchInfo* ForStatement::ParseTokens(ParserContext* context) {
-
+    NodeBranchInfo* ScopeStatement::ParseTokens(ParserContext* context) {
 
         auto NewInfo = NodeBranchInfo::Create();
 
-        std::vector<Token> InitialConditionTokens = this->GetInitialConditionTokens();
-        auto TestTokens = this->GetTestTokens();
-        auto IterationTokens = this->GetIterationTokens();
-        auto ConsequentTokens = this->GetConseqTokens();
+        std::optional<std::vector<SyntaxError>> MaybeErrors;
 
-        ASTNode* InitialConditionNode;
-        ASTNode* TestNode;
-        ASTNode* IterationNode;
-        ASTNode* ConsequentNode;
+        this->forEach(
+                [&](Statement* statement, ParserContext* context_) {
+                    auto MaybeConsequentTokens = TRY(statement->MakeTokenVector());
+                    if (MaybeConsequentTokens) {
+                        context_->PushScopeStatementBody(MaybeConsequentTokens.value());
+                    } else {
+                        MaybeErrors.value().push_back(MaybeConsequentTokens.error());
+                    }
 
-
-        bool AnalyzedThisDepth = false;
-
-        if (!AnalyzedThisDepth) {
+                });
 
 
-
-            AnalyzedThisDepth = true;
-
-        }
-        /*
-        NewInfo->Shape()->Builder().AddChild();
-        NewInfo->Shape()->Builder().GotoParent();
-
-        NewInfo->Shape()->Builder().AddChild();
-        NewInfo->Shape()->Builder().GotoParent();
-
-        auto IterationStatementHolder = Statement::Create();
-        NewInfo->Shape()->Builder().AddChild();
-
-        for (auto& statement: IterationStatements) {
-            NewInfo->Shape()->Builder().AddChild();
-            NewInfo->Shape()->Builder().GotoParent();
-        }
-
-        NewInfo->Shape()->Builder().GotoParent();
-
-        auto ConseqStatementHolder = Statement::Create();
-        NewInfo->Shape()->Builder().AddChild();
-
-        for (auto& statement: ConsequentStatements) {
-            NewInfo->Shape()->Builder().AddChild(statement);
-            NewInfo->Shape()->Builder().GotoParent();
-        }
-
-        NewInfo->Shape()->Builder().GotoParent();
-*/
         return NewInfo;
     }
 
@@ -173,7 +140,7 @@ namespace JSLib {
         OperationTypeMap[")"] = BinaryOpSubType::R_BRACKET;
 
 
-        auto& InfixTokens = this->GetTokenChain();
+        auto InfixTokens;
 
         auto PostfixTokens =Parser::Instance()->Builder()->immBuilder()->ConvertInfixToPostfix(InfixTokens,context, OperationTypeMap);
 

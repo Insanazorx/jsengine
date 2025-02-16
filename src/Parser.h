@@ -18,9 +18,6 @@ for (auto token : tokens) \
 
 namespace JSLib {
 
-    template <typename T>
-    concept Callable = std::invocable<T>;
-
 class Parser {
 friend class ParserContext;
     friend class Statement;
@@ -72,7 +69,7 @@ public:
     ASTNode* GetTopLevelASTNode() {return m_TopLevelASTNode;};
 private:
 
-    ASTNode* RecognizeStatementOrRedirectNode(ErrorOr<std::vector<Token>> tokens, ParserContext* context);
+    ASTNode* RecognizeStatementOrRedirectNode(std::vector<Token> tokens, ParserContext* context);
 
     ASTNode* EnterAnalyzerLoop() {return RecognizeStatementOrRedirectNode(ErrorOr<std::vector<Token>>::Err(Error("ilk")),m_context);}
 

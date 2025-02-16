@@ -7,42 +7,50 @@
 
 // Basit ErrorOr sınıfı. Bir T değeri veya hata mesajı barındırır.
 namespace Util {
+    template <typename T>
+    concept ErrorConcept = requires (T t)
+    {
+        {t.what()} -> std::string;
+    };
+
     class Error {
     public:
 
-        Error(std::string what) : m_what(std::move(what)) {}
+        explicit Error(std::string what) : m_what(std::move(what)) {}
 
         virtual ~Error() = default;
-        std::string what() const { return m_what; }
-    private:
+        [[nodiscard]] std::string what() const { return m_what; }
+    protected:
         std::string m_what;
     };
 
-    template<typename T>
+    template<typename T, ErrorConcept E>
     class ErrorOr {
     private:
 
-        explicit ErrorOr(const T& value) : m_ok(true), m_value(value), m_error(Error("no error")) {}
-        explicit ErrorOr(T&& value) : m_ok(true), m_value(std::move(value)), m_error(Error("no error")) {}
-        explicit ErrorOr(Error& error) : m_ok(false), m_value(), m_error(std::move(error)) {}
+        explicit ErrorOr(const T& value) : m_ok(true), m_value(value), m_error(E("no error")) {}
+        explicit ErrorOr(T&& value) : m_ok(true), m_value(std::move(value)), m_error(E("no error")) {}
+        explicit ErrorOr(E& error) : m_ok(false), m_value(), m_error(std::move(error)) {}
 
     public:
         ~ErrorOr() = default;
         // Başarılı durumda T değerini sarmallar.
-        static ErrorOr<T> Ok(const T& value) {
-            return ErrorOr<T>(value);
+        static ErrorOr Ok(const T& value) {
+            return ErrorOr (value);
         }
 
+        operator bool() const { return m_ok; }
 
-        static ErrorOr<T> Ok(T&& value) {
-            return ErrorOr<T>(std::move(value));
+
+        static ErrorOr Ok(T&& value) {
+            return ErrorOr(std::move(value));
         }
 
 
         // Hata durumunu sarmalar.
-        static ErrorOr<T> Err(Error err)
+        static ErrorOr Err(E err)
         {
-            return ErrorOr<T>(std::move(err));
+            return ErrorOr(std::move(err));
         }
 
         // Durum kontrolü.
@@ -54,34 +62,34 @@ namespace Util {
         T& value() { return m_value; }
 
         // Hata mesajını döndürür.
-        const Error& error() const { return m_error; }
+        const E& error() const { return m_error; }
 
     private:
         bool m_ok;
         T m_value;
-        Error m_error;
+        E m_error;
     };
 
     // void için özel şablonlandırma (opsiyonel)
     // Eğer void dönen işlemler için ErrorOr kullanmak istersen:
-    template<>
-    class ErrorOr<void> {
+    template<ErrorConcept E>
+    class ErrorOr<void, E> {
     private:
-        explicit ErrorOr(const Error& error) : m_ok(false), m_error(error) {}
-        explicit ErrorOr(Error& error) : m_ok(false), m_error(std::move(error)) {}
+        explicit ErrorOr(const E& error) : m_ok(false), m_error(error) {}
+        explicit ErrorOr(E& error) : m_ok(false), m_error(std::move(error)) {}
     public:
         ~ErrorOr() = default;
 
-        static ErrorOr<void> Err(const Error& error) {
-            return ErrorOr<void>(error);
+        static ErrorOr Err(const E& error) {
+            return ErrorOr(error);
         }
 
         bool ok() const { return m_ok;}
-        const Error error() const { return m_error; }
+        const E error() const { return m_error; }
 
     private:
         bool m_ok;
-        Error m_error;
+        E m_error;
     };
 
 
@@ -101,6 +109,6 @@ namespace Util {
         if (!_result.ok()) {                                        \
             return;                                 \
         }                                                           \
-        return ErrorOr<void>::Err(_result.error());                                   \
+        return decltype(expr)::Err(_result.error());                                   \
     }());
 };

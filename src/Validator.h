@@ -5,15 +5,25 @@
 #include "Forward.h"
 namespace JSLib {
     using namespace Util;
+    enum class SyntaxErrorType {
+        MISSING_BRACKET
+    };
 
+    class SyntaxError : public Error {
+    public:
+        SyntaxError(std::string what, TokenPosition pos) : Error(std::move(what)), m_Position(pos) {}
+    private:
+        TokenPosition m_Position;
+        SyntaxErrorType m_Type;
+    };
     class Validator {
     public:
         Validator() = default;
         virtual ~Validator() = default;
 
-        virtual ErrorOr<void> Expect(TokenType expected);
-        virtual ErrorOr<int> ValidateParenthesesMatchAndReturnLastParenthesesIndex(std::vector<Token>& tokens);
-        virtual ErrorOr<int> ValidateBracketsMatchAndReturnLastBracketIndex(std::vector<Token>& tokens);
+        virtual ErrorOr<void, SyntaxError> Expect(TokenType expected);
+        virtual ErrorOr<int, SyntaxError> ValidateParenthesesMatchAndReturnLastParenthesesIndex(std::vector<Token>& tokens);
+        virtual ErrorOr<int, SyntaxError> ValidateBracketsMatchAndReturnLastBracketIndex(std::vector<Token>& tokens);
 
         virtual TokenPosition Visit(IfStatement* statement);
         virtual TokenPosition Visit(ForStatement* statement);
@@ -45,9 +55,9 @@ namespace JSLib {
         SyntaxValidator() = default;
         ~SyntaxValidator() override = default;
 
-        ErrorOr<void> Expect(TokenType expected) override;
-        ErrorOr<int> ValidateParenthesesMatchAndReturnLastParenthesesIndex(std::vector<Token>& tokens) override;
-        ErrorOr<int> ValidateBracketsMatchAndReturnLastBracketIndex(std::vector<Token>& tokens) override;
+        ErrorOr<void, SyntaxError> Expect(TokenType expected) override;
+        ErrorOr<int, SyntaxError> ValidateParenthesesMatchAndReturnLastParenthesesIndex(std::vector<Token>& tokens) override;
+        ErrorOr<int, SyntaxError> ValidateBracketsMatchAndReturnLastBracketIndex(std::vector<Token>& tokens) override;
 
         TokenPosition Visit(IfStatement* statement) override;
         TokenPosition Visit(ForStatement* statement) override;

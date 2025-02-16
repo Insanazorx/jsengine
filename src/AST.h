@@ -10,6 +10,7 @@
 #include "Util.h"
 #include "Validator.h"
 #include "Forward.h"
+#include "Parser.h"
 
 
 namespace JSLib {
@@ -37,8 +38,10 @@ public:
     virtual NodeBranchInfo* ParseTokens(ParserContext* context) {};
     virtual ASTNode* GenerateASTImmediate(ParserContext* context) {return nullptr;}
 
+    virtual ErrorOr<std::vector<Token>,SyntaxError> MakeTokenVector() {}
+
     virtual void SetInitExpr(ImmediateStatement *expression) {}
-    virtual void SetUpdateExpr(Statement* expression) {}
+    virtual void SetUpdateExpr(ImmediateStatement* expression) {}
     virtual void SetTestExpr(ImmediateStatement *expression) {}
     virtual void SetConsequentExpr(Statement* expression) {}
     virtual void SetConsequentImm(ImmediateStatement* expression) {}
@@ -50,6 +53,8 @@ public:
     virtual Statement* AlternateExpr() {return nullptr;}
     virtual Statement* InitExpr() {return nullptr;}
     virtual Statement* UpdateExpr() {return nullptr;}
+
+    virtual void forEach(const std::function<void(Statement *, ParserContext *)>) {}
 
     Statement(const Statement& other) {
         m_Type = other.m_Type;
@@ -74,7 +79,12 @@ private:
 public:
     static ScopeStatement* Create() {return new ScopeStatement();}
     ~ScopeStatement() override = default;
-    NodeBranchInfo* ParseTokens(ParserContext* context) override {}
+    NodeBranchInfo* ParseTokens(ParserContext* context) override;
+    void forEach(const std::function<void(Statement*, ParserContext*)> Callable) override {
+        for (auto& statement: m_Statements) {
+            Callable(statement, Parser::Instance()->Context());
+        }
+    }
 private:
     std::vector<Statement*> m_Statements;
 };
@@ -106,13 +116,13 @@ private:
     Statement* m_alternate {nullptr};
 };
 
-    class ParanthesesStatement : public Statement {
+    class BracketsStatement : public Statement {
     private:
-        ParanthesesStatement() = default;
+        BracketsStatement() = default;
     public:
-        ~ParanthesesStatement() override = default;
-        static ParanthesesStatement* Create() {return new ParanthesesStatement();}
-        NodeBranchInfo* ParseTokens(ParserContext* context) override {}
+        ~BracketsStatement() override = default;
+        static BracketsStatement* Create() {return new BracketsStatement();}
+        NodeBranchInfo* ParseTokens (ParserContext* context) override {}
         StatementType Type() override {return StatementType::BRACKET_STATEMENT;}
     };
 
@@ -132,7 +142,7 @@ public:
     bool isImmediate() override {return true;}
     ASTNode* GenerateASTImmediate(ParserContext* context) {};
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
-    virtual ErrorOr<std::vector<Token>> MakeTokenVector() {}
+    ErrorOr<std::vector<Token>, SyntaxError> MakeTokenVector() override {}
 };
 
 class UnaryOpStatement final : public ImmediateStatement {
@@ -148,6 +158,7 @@ public:
 private:
     ImmediateStatement* m_expression {nullptr};
     Token* m_op {nullptr};
+    std::optional<Statement*> MaybeExpression {std::nullopt};
 
 };
 
@@ -188,7 +199,7 @@ public:
     StatementType Type() override {return StatementType::BINARY_OP_STATEMENT;}
     ASTNode* GenerateASTImmediate(ParserContext* context) override;
 
-    ErrorOr<std::vector<Token>> MakeTokenVector() override;
+    ErrorOr<std::vector<Token>, SyntaxError> MakeTokenVector() override;
 
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
 
@@ -383,9 +394,10 @@ public:
     ~NodeBranchInfo() = default;
     ASTNode* Node() {return m_node;}
     void SetNode(ASTNode* node) {m_node = node;}
+    void SetPositions(std::vector<Error>& errors) {m_errors = errors;}
 private:
-    ASTNode* m_node;
-    TokenPosition m_Position;
+    ASTNode* m_node {nullptr};
+    std::optional<std::vector<Error>> m_errors {std::nullopt};
 };
 
 
@@ -511,8 +523,8 @@ public:
 
     void SetAlternatePresent() {isAlternatePresent = true;}
     void SetTestNode(ASTNode* TestNode) override {Condition = TestNode;}
-    void SetConsequentNode(ASTNode* ConsequentNode) {Consequent = ConsequentNode;}
-    void SetAlternateNode(ASTNode* AlternateNode) {Alternate = AlternateNode;}
+    void SetConsequentNode(ASTNode* ConsequentNode) override {Consequent = ConsequentNode;}
+    void SetAlternateNode(ASTNode* AlternateNode) override {Alternate = AlternateNode;}
 
     ASTNode* TestNode() {return Condition;}
     ASTNode* ConsequentNode() {return Consequent;}
@@ -534,9 +546,9 @@ public:
 private:
     IfNode() = default;
 private:
-    ASTNode* Condition;
-    ASTNode* Consequent;
-    ASTNode* Alternate;
+    ASTNode* Condition {nullptr};
+    ASTNode* Consequent {nullptr};
+    ASTNode* Alternate {nullptr};
 
     bool isAlternatePresent {false};
 

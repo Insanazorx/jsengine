@@ -32,18 +32,18 @@ IfStatement* Parser::CreateNewIfStatement() {
         auto NewStatement = BinaryOpStatement::Create();
             return NewStatement;
         };
-        ASTNode* Parser::RecognizeStatementOrRedirectNode(ErrorOr<std::vector<Token>> tokens, ParserContext* context) {
+        ASTNode* Parser::RecognizeStatementOrRedirectNode(std::vector<Token> tokens, ParserContext* context) {
 
             context->PushCallStack(FUNCTION_NAME());
 
-            VERIFY_ONCE(!tokens.value().empty(),"Tokens should not provided at first");
+            VERIFY_ONCE(!tokens.empty(),"Tokens should not provided at first");
 
-            if (!tokens.value().empty()) {
+            if (!tokens.empty()) {
                 m_CurrentTokenCounter = m_MajorTokenCounter;
             } else {
                 m_MinorTokenCounter = MinorTokenCounter::Create();
                 m_CurrentTokenCounter = m_MinorTokenCounter;
-                m_CurrentTokenCounter->SetTokens(tokens.value());
+                m_CurrentTokenCounter->SetTokens(tokens);
             }
 
             VERIFY_ONCE(m_MajorTokenCounter->Type() == TokenCounterType::MAJOR, "MajorTokenCounter should be selected first");

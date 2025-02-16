@@ -1,6 +1,10 @@
 #pragma once
 
 namespace JSLib {
+
+    template <typename T>
+    concept Callable = std::invocable<T>;
+
     class Statement;
     class IfStatement;
     class ForStatement;
