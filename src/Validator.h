@@ -12,6 +12,7 @@ namespace JSLib {
     class SyntaxError : public Error {
     public:
         SyntaxError(std::string what, TokenPosition pos) : Error(std::move(what)), m_Position(pos) {}
+        SyntaxError(std::string what) : Error(std::move(what)), m_Position({-1, -1}) {}
     private:
         TokenPosition m_Position;
         SyntaxErrorType m_Type;
@@ -56,8 +57,6 @@ namespace JSLib {
         ~SyntaxValidator() override = default;
 
         ErrorOr<void, SyntaxError> Expect(TokenType expected) override;
-        ErrorOr<int, SyntaxError> ValidateParenthesesMatchAndReturnLastParenthesesIndex(std::vector<Token>& tokens) override;
-        ErrorOr<int, SyntaxError> ValidateBracketsMatchAndReturnLastBracketIndex(std::vector<Token>& tokens) override;
 
         TokenPosition Visit(IfStatement* statement) override;
         TokenPosition Visit(ForStatement* statement) override;

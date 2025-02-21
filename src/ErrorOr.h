@@ -7,11 +7,8 @@
 
 // Basit ErrorOr sınıfı. Bir T değeri veya hata mesajı barındırır.
 namespace Util {
-    template <typename T>
-    concept ErrorConcept = requires (T t)
-    {
-        {t.what()} -> std::string;
-    };
+
+
 
     class Error {
     public:
@@ -24,7 +21,7 @@ namespace Util {
         std::string m_what;
     };
 
-    template<typename T, ErrorConcept E>
+    template<typename T, typename E>
     class ErrorOr {
     private:
 
@@ -50,7 +47,7 @@ namespace Util {
         // Hata durumunu sarmalar.
         static ErrorOr Err(E err)
         {
-            return ErrorOr(std::move(err));
+            return ErrorOr(err);
         }
 
         // Durum kontrolü.
@@ -72,7 +69,7 @@ namespace Util {
 
     // void için özel şablonlandırma (opsiyonel)
     // Eğer void dönen işlemler için ErrorOr kullanmak istersen:
-    template<ErrorConcept E>
+    template<typename E>
     class ErrorOr<void, E> {
     private:
         explicit ErrorOr(const E& error) : m_ok(false), m_error(error) {}

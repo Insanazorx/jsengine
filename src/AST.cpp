@@ -21,7 +21,7 @@ namespace JSLib {
 
         ASTNode* ConsequentNode = nullptr;
 
-        ConsequentNode = Parser::Instance()->RecognizeStatementOrRedirectNode(MaybeConsequentTokens, context);
+        ConsequentNode = Parser::Instance()->AnalyzeImpl(MaybeConsequentTokens.value(), context);
 
         auto NewNode = ReturnNode::Create();
         NewNode->SetValue("return");
@@ -58,30 +58,6 @@ namespace JSLib {
 
 
 
-
-
-
-        ASTNode* TestNode = nullptr;
-        std::vector<ASTNode*> ConsequentNodes;
-        std::vector<ASTNode*> AlternateNodes;
-
-
-        VERIFY(TestNode,"TestNode returned nullptr");
-
-
-
-
-        auto NewNode = IfNode::Create();
-        NewNode->SetValue("if");
-
-        NewInfo->SetNode(NewNode);
-
-        NewInfo->Node()->SetTestNode(TestNode);
-        NewInfo->Node()->SetConsequentNode(ConsequentNode);
-
-        if (AlternateTokens)
-            NewInfo->Node()->SetAlternateNode(AlternateNode);
-
         auto Dump = NewInfo->Node()->toJson().dump(4);
 
         std::cout << "-------------------" << "IfStatement::ParseTokens" << "-------------------"<< std::endl;
@@ -93,21 +69,18 @@ namespace JSLib {
 
     NodeBranchInfo* ScopeStatement::ParseTokens(ParserContext* context) {
 
-        auto NewInfo = NodeBranchInfo::Create();
-
         std::optional<std::vector<SyntaxError>> MaybeErrors;
 
+
         this->forEach(
-                [&](Statement* statement, ParserContext* context_) {
-                    auto MaybeConsequentTokens = TRY(statement->MakeTokenVector());
-                    if (MaybeConsequentTokens) {
-                        context_->PushScopeStatementBody(MaybeConsequentTokens.value());
-                    } else {
-                        MaybeErrors.value().push_back(MaybeConsequentTokens.error());
-                    }
+            [&](Statement* statement) {
 
-                });
 
+
+
+            });
+
+        auto NewInfo = NodeBranchInfo::Create();
 
         return NewInfo;
     }
@@ -115,7 +88,7 @@ namespace JSLib {
     ASTNode* BinaryOpStatement::GenerateASTImmediate(ParserContext* context) {
 
         auto InitialNode = ASTNode::Create();
-        Parser::Instance()->Builder()->immBuilder()->SetCurrentNode(InitialNode);
+        Parser::Instance()->immBuilder()->SetCurrentNode(InitialNode);
 
         std::unordered_map<std::string, BinaryOpSubType> OperationTypeMap;
         OperationTypeMap["+"] = BinaryOpSubType::ADD;
@@ -140,33 +113,28 @@ namespace JSLib {
         OperationTypeMap[")"] = BinaryOpSubType::R_BRACKET;
 
 
-        auto InfixTokens;
 
-        auto PostfixTokens =Parser::Instance()->Builder()->immBuilder()->ConvertInfixToPostfix(InfixTokens,context, OperationTypeMap);
+        //auto PostfixTokens =Parser::Instance()->immBuilder()->ConvertInfixToPostfix(InfixTokens,context, OperationTypeMap);
 
         DEBUG("Press key to print Postfix Tokens...");
         std::cout<<"-------------------" << "BinaryOpStatement::GenerateASTImmediate" << "-------------------"<< std::endl;
         std::cout << "Postfix Tokens: ";
-        for (auto& token : *PostfixTokens) {
-            std::cout << token.Lexeme<< " ";
-        }
         std::cout << std::endl;
         std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
 
-        auto ASTBranch = Parser::Instance()->Builder()->immBuilder()->GenerateASTFromPostfix(PostfixTokens, context, OperationTypeMap);
+        //auto ASTBranch = Parser::Instance()->Builder()->immBuilder()->GenerateASTFromPostfix(PostfixTokens, context, OperationTypeMap);
 
         DEBUG ("Press key to print AST...");
         std::cout <<"-------------------" << "BinaryOpStatement::GenerateASTImmediate" << "-------------------"<< std::endl;
         std::cout << "ASTBranch: ";
-        const auto dump = ASTBranch->toJson().dump(4);
-        std::cout << dump << std::endl;
+        //const auto dump = ASTBranch->toJson().dump(4);
         std::cout << "-----------------------------------------------------------------------------------------"<< std::endl;
 
 
-        return ASTBranch;
+        return nullptr;
     }
 
-    std::shared_ptr<std::vector<Token>> ASTBuilder::ImmediateBuilder::ConvertInfixToPostfix(
+    std::shared_ptr<std::vector<Token>> ImmediateBuilder::ConvertInfixToPostfix(
         const std::vector<Token> &TokensToConvert, ParserContext *context,
         std::unordered_map<std::string, BinaryOpSubType>& OpTypeMap) {
 
@@ -234,7 +202,7 @@ namespace JSLib {
         };
         return PostfixTokens;
     }
-    ASTNode* ASTBuilder::ImmediateBuilder::GenerateASTFromPostfix(std::shared_ptr<std::vector<Token>> PostfixToASTTokens,
+    ASTNode* ImmediateBuilder::GenerateASTFromPostfix(std::shared_ptr<std::vector<Token>> PostfixToASTTokens,
                                                                   ParserContext* context,
                                                                   std::unordered_map<std::string,BinaryOpSubType>& OpTypeMap) {
         int TokenIndex = 0;
@@ -348,15 +316,4 @@ namespace JSLib {
         }
         return CurrentNode();
     }
-    bool ASTBuilder::SpecializerVisitor::CheckIfStackContainsElement() {};
-    bool ASTBuilder::SpecializerVisitor::CheckIfMoreThanOneChild() {};
-    bool ASTBuilder::SpecializerVisitor::ReturnToLastStackElement() {};
-    bool ASTBuilder::SpecializerVisitor::SwitchToOtherChild() {};
-    void ASTBuilder::SpecializerVisitor::SwapNode(ASTNode* TreeNode, ASTNode* StrayNode) {};
-    void ASTBuilder::SpecializerVisitor::PlaceNodeAndIterateToChild(ASTNode* NodeToPlace) {};
-
-    ASTNode* ASTBuilder::GenerateScaffoldingByShape() {};
-    void ASTBuilder::SetBuilderParametersByLookingShape() {};
-    ASTNode* ASTBuilder::SearchSpecificNode(NodeBranchInfo* info, ASTNode* Current) {};
-    ASTNode* ASTBuilder::ExtractTopLevelNode() {};
 }

@@ -20,7 +20,7 @@ namespace JSLib {
         R_BRACE, L_BRACKET, R_BRACKET,
         RETURN, CLASS, NUMERIC,
         IDENTIFIER, INVALID, SEMICOLON,
-        START_OF_SCOPE, END_OF_SCOPE
+        STATEMENT_HOLDER
     };
 
     struct TokenPosition {
@@ -45,6 +45,15 @@ namespace JSLib {
         }
 
         Token& operator=(const Token& other) = default;
+
+    };
+    struct StatementHolder : Token {
+        StatementHolder() {
+          Type = TokenType::STATEMENT_HOLDER;
+        }
+        ~StatementHolder() = default;
+
+        StatementType allowed_types {StatementType::ANY_OF_STATEMENT_TYPES};
 
     };
 }
