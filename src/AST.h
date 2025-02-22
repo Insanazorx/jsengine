@@ -46,6 +46,12 @@ public:
 
     virtual ErrorOr<std::vector<Token>,SyntaxError> MakeTokenVector() {return ErrorOr<std::vector<Token>,SyntaxError>::Ok(m_tokens);}
 
+    virtual Statement* FocusOnTestStatement(ParserContext *context);
+    virtual Statement* FocusOnConsequentStatement(ParserContext *context);
+    virtual Statement* FocusOnAlternateStatement(ParserContext *context);
+
+
+
     virtual void SetInitExpr(ImmediateStatement *expression) {}
     virtual void SetUpdateExpr(ImmediateStatement* expression) {}
     virtual void SetTestExpr(ImmediateStatement *expression) {}
@@ -59,14 +65,16 @@ public:
     virtual Statement* AlternateExpr() {return nullptr;}
     virtual Statement* InitExpr() {return nullptr;}
     virtual Statement* UpdateExpr() {return nullptr;}
+    virtual void forEach(const std::function<void(Statement *)>) {}
 
     template <DerivedFromStatement S>
-    void ConvertTo (S* statement) {
-        statement->convertFrom(this);
+    [[nodiscard]] S* ConvertTo() {
+        auto tokens = std::move(m_tokens);
+        auto new_statement = S::Create();
+        new_statement->m_tokens = std::move(tokens);
+        return new_statement;
     }
 
-
-    virtual void forEach(const std::function<void(Statement *)>) {}
 
     Statement(const Statement& other) {
         m_tokens = other.m_tokens;
@@ -74,10 +82,11 @@ public:
 
     virtual bool isImmediate(){return false;}
 
-    void awaitExpression(ParserContext* context) {
+    virtual void awaitExpression(ParserContext* context) {
         context->PushToWaitingStack(this);
     }
 
+    std::vector<Token>& Tokens() {return m_tokens;}
     virtual int AwaitingExpressionCount() {return 0;} //-1 means no limit
 
 protected:
@@ -94,7 +103,6 @@ protected:
         NodeBranchInfo* ParseTokens(ParserContext* context) override {}
         StatementType CheckWhetherScopeOrObjectByLookingTokens();
         int AwaitingExpressionCount() override {return -1;}
-
     };
 
 
@@ -112,7 +120,6 @@ public:
         }
     };
 
-    CONVERT_INTERFACE(ScopeStatement);
     int AwaitingExpressionCount() override {return -1;}
     StatementType Type() override {return StatementType::SCOPE_STATEMENT;}
 private:
@@ -127,8 +134,6 @@ private:
         ~ObjectStatement() override = default;
         NodeBranchInfo* ParseTokens(ParserContext* context) override;
         StatementType Type() override {return StatementType::OBJECT_STATEMENT;}
-
-        CONVERT_INTERFACE(ObjectStatement);
     };
 
     class IfStatement : public Statement {
@@ -138,8 +143,9 @@ private:
 public:
     ~IfStatement() override = default;
     static IfStatement* Create() {return new IfStatement();}
+        Statement* FocusOnTestStatement(ParserContext *context) override;
 
-    void SetTest(ImmediateStatement* test) {m_test = test;}
+        void SetTest(ImmediateStatement* test) {m_test = test;}
     void SetConsequent(Statement* consequent) {m_consequent = consequent;}
     void SetAlternate(Statement* alternate) {m_alternate = alternate;}
 
@@ -149,7 +155,6 @@ public:
 
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
 
-        CONVERT_INTERFACE(IfStatement);
     NodeBranchInfo* ParseTokens(ParserContext* context) override;
     StatementType Type() override {return StatementType::IF_STATEMENT;}
         int AwaitingExpressionCount() override {return 3;}
@@ -168,7 +173,7 @@ private:
         NodeBranchInfo* ParseTokens (ParserContext* context) override {}
         StatementType Type() override {return StatementType::BRACKET_STATEMENT;}
         int AwaitingExpressionCount() override {return -1;}
-        CONVERT_INTERFACE(BracketStatement);
+
     };
 
 
@@ -203,7 +208,7 @@ public:
     ASTNode* GenerateASTImmediate(ParserContext* context) {}
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     int AwaitingExpressionCount() override {return 2;}
-    CONVERT_INTERFACE(UnaryOpStatement);
+
 private:
     ImmediateStatement* m_expression {nullptr};
     SingleTokenStatement* m_op {nullptr};
@@ -220,7 +225,7 @@ public:
     ASTNode* GenerateASTImmediate(ParserContext* context) override;
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     int AwaitingExpressionCount() override {return 2;}
-    CONVERT_INTERFACE(AssignmentStatement);
+
 private:
     ImmediateStatement* m_lvalue {nullptr};
     ImmediateStatement* m_rvalue {nullptr};
@@ -237,7 +242,7 @@ public:
     ASTNode* GenerateASTImmediate(ParserContext* context) {}
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     int AwaitingExpressionCount() override {return 1;}
-    CONVERT_INTERFACE(VariableDeclarationStatement);
+
     
 private:
     Statement* m_variable {nullptr};
@@ -259,7 +264,7 @@ public:
 
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     int AwaitingExpressionCount() override {return 3;}
-    CONVERT_INTERFACE(BinaryOpStatement);
+
 private:
     ImmediateStatement* m_lhs {nullptr};
     ImmediateStatement* m_op {nullptr};
@@ -300,7 +305,7 @@ public:
     NodeBranchInfo* ParseTokens(ParserContext* context);
     StatementType Type() override {return StatementType::FOR_STATEMENT;}
     int AwaitingExpressionCount() override {return 4;}
-    CONVERT_INTERFACE(ForStatement);
+
 private:
     Statement* m_init {nullptr};
     Statement* m_test {nullptr};
@@ -320,7 +325,7 @@ public:
     StatementType Type() override {return StatementType::WHILE_STATEMENT;}
     int AwaitingExpressionCount() override {return 2;}
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
-    CONVERT_INTERFACE(WhileStatement);
+
 private:
     Statement* m_test {nullptr};
     Statement* m_body {nullptr};
@@ -349,7 +354,7 @@ private:
         NodeBranchInfo* ParseTokens (ParserContext* context) override {}
         StatementType Type() override {return StatementType::FUNCTION_STATEMENT;}
         int AwaitingExpressionCount() override {return -1;}
-        CONVERT_INTERFACE(FunctionStatement);
+
 
     private:
         std::vector<SingleTokenStatement*> m_arguments {nullptr};
@@ -375,7 +380,6 @@ private:
         void SetConsequentImm (ImmediateStatement* expression) override {m_expression = expression;}
         ImmediateStatement* ConsequentImm() override {return m_expression;}
 
-        CONVERT_INTERFACE(ReturnStatement);
     private:
         ImmediateStatement* m_expression {nullptr};
 

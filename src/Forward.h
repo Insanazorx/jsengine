@@ -5,7 +5,6 @@ namespace JSLib {
     template <typename T>
     concept Callable = std::invocable<T>;
 
-
     class Statement;
     class IfStatement;
     class ForStatement;
@@ -41,16 +40,7 @@ namespace JSLib {
     class Context;
     class ParserContext;
 
-#define CONVERT_INTERFACE(TYPE)                         \
-    friend class TYPE;                                  \
-    auto ConvertFrom (Statement* statement) -> typename TYPE##*{          \
-       auto tokens = statement->m_tokens;                \
-       auto new_statement = TYPE##::Create();             \
-       new_statement->m_tokens = tokens;                \
-       return new_statement;                                     \
-    }
-
-
+    enum class AnalyzeMode {STATEMENT,AST_NODE};
 
     #define ALL_STATEMENTS_FRIENDS \
     friend class Statement;                \

@@ -20,7 +20,7 @@ namespace JSLib {
         R_BRACE, L_BRACKET, R_BRACKET,
         RETURN, CLASS, NUMERIC,
         IDENTIFIER, INVALID, SEMICOLON,
-        STATEMENT_HOLDER
+        STATEMENT_HOLDER, END_OF_STATEMENT, VOID_TOKEN
     };
 
     struct TokenPosition {
@@ -55,5 +55,19 @@ namespace JSLib {
 
         StatementType allowed_types {StatementType::ANY_OF_STATEMENT_TYPES};
 
+    };
+
+    struct EndOfStatement: Token {
+        EndOfStatement() {
+            Type = TokenType::END_OF_STATEMENT;
+        }
+        ~EndOfStatement() = default;
+    };
+
+    struct VoidToken : Token {
+        VoidToken() {
+            Type = TokenType::VOID_TOKEN;
+        }
+        ~VoidToken() = default;
     };
 }

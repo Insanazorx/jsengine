@@ -6,6 +6,10 @@
 #include <functional>
 
 #include "AST.h"
+#include "AST.h"
+#include "AST.h"
+#include "AST.h"
+#include "AST.h"
 #include "LexerTypes.h"
 #include "Util.h"
 #include "Lexer.h"
@@ -19,18 +23,7 @@ namespace JSLib {
 
 class Parser {
 friend class ParserContext;
-    friend class Statement;
-    friend class IfStatement;
-    friend class ForStatement;
-    friend class ImmediateStatement;
-    friend class ReturnStatement;
-    friend class BinaryOpStatement;
-    friend class UnaryOpStatement;
-    friend class VariableDeclarationStatement;
-    friend class AssignmentStatement;
-    friend class WhileStatement;
-    friend class FunctionStatement;
-    friend class ProgramStatement;
+ALL_STATEMENTS_FRIENDS;
 
 private:
 
@@ -67,12 +60,25 @@ public:
 
     ASTNode* GetTopLevelASTNode() {return m_TopLevelASTNode;};
 private:
+std::variant<ASTNode*, Statement*> AnalyzeImpl(std::optional<std::vector<Token> > tokens, ParserContext *context, AnalyzeMode mode);
 
-    ASTNode* AnalyzeImpl(std::optional<std::vector<Token>> tokens, ParserContext* context);
+    void DecideStatementType(Statement *&statement);
 
-    void BuildAndSpecializeStatement(Statement* statement, ParserContext* context);
+    static void BuildStatement(Statement*& statement, ParserContext* context);
 
-    ASTNode* EnterAnalyzerLoop() {return AnalyzeImpl(std::nullopt,m_context);}
+    void BuildIfStatement(Statement*& statement, ParserContext* context);
+    void BuildForStatement(Statement*& statement, ParserContext* context);
+    void BuildWhileStatement(Statement*& statement, ParserContext* context);
+    void BuildFunctionStatement(Statement*& statement, ParserContext* context);
+    void BuildReturnStatement(Statement*& statement, ParserContext* context);
+    void BuildBinaryOpStatement(Statement*& statement, ParserContext* context);
+    void BuildUnaryOpStatement(Statement*& statement, ParserContext* context);
+    void BuildVariableDeclarationStatement(Statement*& statement, ParserContext* context);
+    void BuildScopeStatement(Statement*& statement, ParserContext* context);
+
+    void DispatchStatement(Statement* statement, ParserContext* context);
+
+    ASTNode* EnterAnalyzerLoop() {return std::get<ASTNode*>(AnalyzeImpl(std::nullopt,m_context, AnalyzeMode::AST_NODE));}
 
     ASTNode* StatementParser(Statement* statement, ParserContext* context);
 

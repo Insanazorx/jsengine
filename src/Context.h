@@ -27,6 +27,8 @@ class Context{};
         void PushToWaitingStack(Statement* statement) {m_WaitingReceiverStatementStack.Push(statement);}
         void PopFromWaitingStack() {m_WaitingReceiverStatementStack.Pop();}
 
+        Statement* TopOfWaitingStack() {return m_WaitingReceiverStatementStack.Peek();}
+
         Statement* RedirectWaitingStatement() {
             if (m_WaitingReceiverStatementStack.Size() > 0) {
                 return m_WaitingReceiverStatementStack.Pop();

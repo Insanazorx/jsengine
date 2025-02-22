@@ -21,7 +21,7 @@ namespace JSLib {
 
         ASTNode* ConsequentNode = nullptr;
 
-        ConsequentNode = Parser::Instance()->AnalyzeImpl(MaybeConsequentTokens.value(), context);
+        ConsequentNode = std::get<ASTNode*>(Parser::Instance()->AnalyzeImpl(MaybeConsequentTokens.value(), context, AnalyzeMode::AST_NODE));
 
         auto NewNode = ReturnNode::Create();
         NewNode->SetValue("return");
@@ -315,5 +315,21 @@ namespace JSLib {
             }
         }
         return CurrentNode();
+    }
+
+    Statement* IfStatement::FocusOnTestStatement(ParserContext *context) {
+        auto focus = *new std::vector<Token>;
+        auto idx = 0;
+        while (this->Tokens().at(idx++).Type == TokenType::L_BRACKET);
+        while (this->Tokens().at(idx).Type == TokenType::END_OF_STATEMENT) {
+            focus.push_back(this->Tokens().at(idx));
+            idx++;
+        }
+        do {
+            focus.pop_back();
+        }while (this->Tokens().at(idx).Type != TokenType::R_BRACKET);
+        focus.pop_back(); //pop R_BRACKET
+
+    return std::get<Statement*>(Parser::Instance()->AnalyzeImpl(focus, context, AnalyzeMode::STATEMENT));
     }
 }
