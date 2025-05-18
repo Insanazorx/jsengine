@@ -1,10 +1,10 @@
 #pragma once
-#include "Util.h"
+#include "../Util.h"
 #include <optional>
 #include "Forward.h"
-#include "Validator.h"
+#include "../Validator.h"
 
-namespace JSLib{
+namespace js{
 
 class Context{};
     class ParserContext : public Context {
@@ -44,10 +44,12 @@ class Context{};
         }
 
         Statement* SendStatement() {
-            if (m_StatementStackToSendReceiver.Size() > 0) {
-                return m_StatementStackToSendReceiver.Pop();
+            if (m_StatementStackToSendReceiver.size() > 0) {
+                auto ret = m_StatementStackToSendReceiver.back();
+                m_StatementStackToSendReceiver.pop_back();
+                return ret;
             }
-            return nullptr;
+            VERIFY_NOT_REACHED();
         }
 
         Validator* SyntacticValidator() const {return m_syntax_validator;}
@@ -62,12 +64,12 @@ class Context{};
             return result;
         }
 
-        void PushSendingStack(Statement* statement) {m_StatementStackToSendReceiver.Push(statement);}
-        bool isThereAnySendingStatement() {return m_StatementStackToSendReceiver.Size() > 0;}
+        void PushSendingStack(Statement* statement) {m_StatementStackToSendReceiver.push_back(statement);}
+        bool isThereAnySendingStatement() {return m_StatementStackToSendReceiver.size() > 0;}
     private:
 
         Stack<std::vector<Token>> m_ScopeStatementBodyStack;
-        Stack<Statement*> m_StatementStackToSendReceiver;
+        std::deque<Statement*> m_StatementStackToSendReceiver;
         Stack<Statement*> m_WaitingReceiverStatementStack;
         Stack<std::string> m_MainCallStack;
         Parser* parserObj;

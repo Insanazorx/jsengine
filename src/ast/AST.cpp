@@ -1,11 +1,11 @@
 #include "AST.h"
-#include "Parser.h"
+#include "../frontend/Parser.h"
 
 #include <optional>
 #include <vector>
 #include <unordered_map>
 
-namespace JSLib {
+namespace js {
 
     NodeBranchInfo* ReturnStatement::ParseTokens(ParserContext* context) {
         context->PushCallStack(FUNCTION_NAME());

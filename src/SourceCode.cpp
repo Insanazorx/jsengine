@@ -1,6 +1,6 @@
 #include "SourceCode.h"
 #include <fstream>
-namespace JSLib {
+namespace js {
     bool SourceCode::ReadSourceCodeFromPath() {
         std::ifstream file;
         file.open(m_path.value());

@@ -4,7 +4,7 @@
 
 #include "debug.h"
 
-namespace JSLib {
+namespace js {
     enum class StatementType{
         PROGRAM, IF_STATEMENT, FOR_STATEMENT, RETURN_STATEMENT,
         WHILE_STATEMENT, SWITCH_CASE_STATEMENT,IMMEDIATE_STATEMENT,

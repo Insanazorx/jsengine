@@ -4,10 +4,10 @@
 #include <vector>
 #include <string>
 
-#include "Util.h"
+#include "../Util.h"
 #include "debug.h"
 
-using namespace JSLib;
+using namespace js;
 
 void Lexer::Scan() {
     const std::string chars("+ - * / = ; || << ( ) { } >> < > != == <= >= ===");

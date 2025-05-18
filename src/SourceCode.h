@@ -5,10 +5,10 @@
 #include <string>
 #include <optional>
 
-#include "Lexer.h"
-#include "LexerTypes.h"
+#include "frontend/Lexer.h"
+#include "frontend/LexerTypes.h"
 
-namespace JSLib {
+namespace js {
     class SourceCode {
     private:
         explicit SourceCode(std::string path) : m_path(path) {};

@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
+#include <coroutine>
+#include "frontend/debug.h"
 
-#include "debug.h"
-
-namespace JSLib {
+namespace js {
     using namespace std;
     template <typename T>
     class Stack {
@@ -103,4 +103,5 @@ namespace JSLib {
             }
         return -1;
     }
+
 }

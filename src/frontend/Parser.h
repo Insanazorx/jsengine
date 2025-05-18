@@ -4,14 +4,11 @@
 #include <optional>
 #include <type_traits>
 #include <functional>
+#include <future>
 
-#include "AST.h"
-#include "AST.h"
-#include "AST.h"
-#include "AST.h"
-#include "AST.h"
+#include "../ast/AST.h"
 #include "LexerTypes.h"
-#include "Util.h"
+#include "../Util.h"
 #include "Lexer.h"
 #include "Forward.h"
 
@@ -19,7 +16,7 @@
 for (auto token : tokens) \
     DEBUG( GREEN_TEXT <<"PARSER : " << FUNCTION_NAME() << RESET_TEXT << " Type of token: " << Lexer::StringifyTokenType(token));
 
-namespace JSLib {
+namespace js {
 
 class Parser {
 friend class ParserContext;
@@ -64,17 +61,17 @@ std::variant<ASTNode*, Statement*> AnalyzeImpl(std::optional<std::vector<Token> 
 
     void DecideStatementType(Statement *&statement);
 
-    static void BuildStatement(Statement*& statement, ParserContext* context);
+void BuildStatement(Statement *&statement, ParserContext *context);
 
-    void BuildIfStatement(Statement*& statement, ParserContext* context);
-    void BuildForStatement(Statement*& statement, ParserContext* context);
-    void BuildWhileStatement(Statement*& statement, ParserContext* context);
-    void BuildFunctionStatement(Statement*& statement, ParserContext* context);
-    void BuildReturnStatement(Statement*& statement, ParserContext* context);
-    void BuildBinaryOpStatement(Statement*& statement, ParserContext* context);
-    void BuildUnaryOpStatement(Statement*& statement, ParserContext* context);
-    void BuildVariableDeclarationStatement(Statement*& statement, ParserContext* context);
-    void BuildScopeStatement(Statement*& statement, ParserContext* context);
+    void BuildIf(Statement *&statement, ParserContext *context);
+    void BuildFor(Statement*& statement, ParserContext* context);
+    void BuildWhile(Statement*& statement, ParserContext* context);
+    void BuildFunction(Statement*& statement, ParserContext* context);
+    void BuildReturn(Statement*& statement, ParserContext* context);
+    void BuildBinaryOp(Statement*& statement, ParserContext* context);
+    void BuildUnaryOp(Statement*& statement, ParserContext* context);
+    void BuildVariableDeclaration(Statement*& statement, ParserContext* context);
+    void BuildScope(Statement*& statement, ParserContext* context);
 
     void DispatchStatement(Statement* statement, ParserContext* context);
 

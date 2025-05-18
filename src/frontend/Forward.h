@@ -1,6 +1,6 @@
 #pragma once
 
-namespace JSLib {
+namespace js {
 
     template <typename T>
     concept Callable = std::invocable<T>;
@@ -30,7 +30,7 @@ namespace JSLib {
     class UnaryOpNode;
     class AssignmentNode;
     class VariableDeclarationNode;
-    class ScopeNode;
+    class BlockNode;
 
     class Parser;
     class Validator;

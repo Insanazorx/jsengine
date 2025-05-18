@@ -1,5 +1,8 @@
 #include "Parser.h"
-#include "AST.h"
+
+#include <future>
+
+#include "../ast/AST.h"
 #include "debug.h"
 
 #include <variant>
@@ -7,7 +10,7 @@
 #include <string>
 
 
-namespace JSLib {
+namespace js {
 Parser* Parser::m_Instance = nullptr;
 
 std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vector<Token> > tokens,
@@ -73,10 +76,9 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
             DecideStatementType(new_statement);
             VERIFY(new_statement->Type() != StatementType::INVALID_STATEMENT, "Invalid statement type");
 
-            if (mode == AnalyzeMode::STATEMENT) {
-                BuildStatement(new_statement, context); //statement building loop
-                return new_statement;
-            }
+
+            BuildStatement(new_statement, context); //statement building loop
+
             RetNode = StatementParser(new_statement, context);
         }
 
@@ -113,23 +115,34 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
         VERIFY(context->isThereAnyWaitingStatement(), "There is no waiting statement");
         switch (context->TopOfWaitingStack()->Type()) {
             case StatementType::IF_STATEMENT:
-                if (!statement->TestExpr()) {
-                    auto expr = dynamic_cast<ImmediateStatement*>(statement);
-                    VERIFY(expr, "Statement should be ImmediateStatement");
-                    statement->SetTestExpr(expr);
-                } else if (!statement->ConsequentExpr()) {
-                    auto expr = statement;
-                    statement->SetConsequentExpr(expr);
-                } else if (!statement->AlternateExpr()) {
-                    auto expr = statement;
-                    statement->SetAlternateExpr(expr);
+                if (!context->TopOfWaitingStack()->ConsequentExpr() &&
+                     context->TopOfWaitingStack()->SearchForSpecificHolder(
+                         StatementHolderType::CONSEQUENT, statement->ParentID().value())
+                         ) {
+                    context->TopOfWaitingStack()->SetConsequentExpr(statement);
+                    context->PopFromWaitingStack();
                 }
+                if (!context->TopOfWaitingStack()->AlternateExpr() &&
+                    context->TopOfWaitingStack()->SearchForSpecificHolder(
+                        StatementHolderType::ALTERNATE, statement->ParentID().value())
+                        ) {
+                    context->TopOfWaitingStack()->SetAlternateExpr(statement);
+                    context->PopFromWaitingStack();
+                }
+            break;
+
             case StatementType::RETURN_STATEMENT:
                 if (!statement->ConsequentImm()) {
                     auto expr = dynamic_cast<ImmediateStatement*>(statement);
                     VERIFY(expr, "Statement should be ImmediateStatement");
-                    statement->SetConsequentImm(expr);
+                    if (context->TopOfWaitingStack()->SearchForSpecificHolder(
+                            StatementHolderType::CONSEQUENT, statement->ParentID().value())
+                            ) {
+                        context->TopOfWaitingStack()->SetConsequentImm(expr);
+                        context ->PopFromWaitingStack();
+                    }
                 }
+            break;
             default:
                 VERIFY_NOT_REACHED();
 
@@ -140,9 +153,11 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
 
     void Parser::RulesForIfExpr(Statement *new_statement) {
 
-
         int idx = 0;
+
         StatementHolder statement_holder;
+        statement_holder.holder_type = StatementHolderType::CONSEQUENT;
+
         EndOfStatement end_of_statement;
 
         new_statement->PushToken(Consume());
@@ -161,8 +176,9 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
             new_statement->PushToken(Consume());
         }
 
-
         new_statement->PushToken(statement_holder);
+
+        statement_holder.holder_type = StatementHolderType::ALTERNATE;
 
         if (PeekFront(0) == TokenType::ELSE) {
             new_statement->PushToken(Consume());
@@ -227,8 +243,7 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
         }
 
         StatementHolder statement_holder;
-        statement_holder.allowed_types = StatementType::ANY_OF_STATEMENT_TYPES;
-
+        statement_holder.holder_type = StatementHolderType::CONSEQUENT;
         new_statement->PushToken(statement_holder);
 
         EndOfStatement end_of_statement;
@@ -304,27 +319,18 @@ std::variant<ASTNode *, Statement *> Parser::AnalyzeImpl(std::optional<std::vect
     void Parser::BuildStatement(Statement *&statement, ParserContext *context) {
         switch (statement->Type()) {
             case StatementType::IF_STATEMENT:
-
-                auto focus = statement->FocusOnTestStatement(context);
-                auto expr = dynamic_cast<ImmediateStatement*>(focus);
-
-                VERIFY(expr, "Focus cant be nullptr");
-                statement->SetTestExpr(expr);
-
-                const int MaybeConsequentHolderIndex = (int)statement->Tokens().size() - 3;
-                const int MaybeAlternateHolderIndex = (int)statement->Tokens().size() - 1;
-
-                if (statement->Tokens().at(MaybeConsequentHolderIndex).Type == TokenType::STATEMENT_HOLDER) {
-                    statement->awaitExpression(context);
-                }
-                if (statement->Tokens().at(MaybeAlternateHolderIndex).Type == TokenType::STATEMENT_HOLDER) {
-                    statement->awaitExpression(context);
-                }
-
+                BuildIf(statement, context);
+            case StatementType::FOR_STATEMENT:
+                BuildFor(statement, context);
+            case StatementType::WHILE_STATEMENT:
+                BuildWhile(statement, context);
+            case StatementType::FUNCTION_STATEMENT:
+                BuildFunction(statement, context);
+            case StatementType::RETURN_STATEMENT:
+                BuildReturn(statement, context);
                 break;
             default:
                 VERIFY_NOT_REACHED();
-
         }
     }
 
@@ -366,6 +372,38 @@ TokenType Parser::PeekHind(int Distance){
     return false;
 }
 
+    void Parser::BuildIf(Statement *&statement, ParserContext *context) {
+
+
+        auto& tokens = statement->Tokens();
+
+        for (auto token : tokens) {
+            if (token.Type == TokenType::STATEMENT_HOLDER) {
+                if (token.holder_type == StatementHolderType::CONSEQUENT) {
+                    statement->awaitExpression(context);
+                }
+                if (token.holder_type == StatementHolderType::ALTERNATE) {
+                    statement->awaitExpression(context);
+                }
+            }
+        }
+
+        auto focus = statement->FocusOnTestStatement(context);
+        auto expr = dynamic_cast<ImmediateStatement*>(focus);
+
+        VERIFY(expr, "Focus cant be nullptr");
+        statement->SetTestExpr(expr);
+
+    }
+
+    void Parser::BuildFor(Statement*& statement, ParserContext* context){}
+    void Parser::BuildWhile(Statement*& statement, ParserContext* context){}
+    void Parser::BuildFunction(Statement*& statement, ParserContext* context){}
+    void Parser::BuildReturn(Statement*& statement, ParserContext* context){}
+    void Parser::BuildBinaryOp(Statement*& statement, ParserContext* context){}
+    void Parser::BuildUnaryOp(Statement*& statement, ParserContext* context){}
+    void Parser::BuildVariableDeclaration(Statement*& statement, ParserContext* context){}
+    void Parser::BuildScope(Statement*& statement, ParserContext* context){}
 
 ASTNode* Parser::ValidateSemanticsByVisitor(NodeBranchInfo* NodeInfo){
 

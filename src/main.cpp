@@ -1,12 +1,46 @@
-#include "Lexer.h"
-#include "Context.h"
-#include "debug.h"
-#include "Parser.h"
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <string>
 
-using namespace JSLib;
+#include "./ast/ASTNodeFactory.h"
+
+
+
 
 int main () {
-    std::string expr("if (d-(a+b)*c) { return 1 + 2 + 3 ; }");
+
+    std::string file_path = "/Users/insanazor/Desktop/esprima/ast.json";
+    std::ifstream ast_file(file_path);
+    if (!ast_file.is_open()) {
+        std::cerr << "Error opening file: " << file_path << std::endl;
+        return 1;
+    }
+
+    nlohmann::json json_data;
+    try {
+        ast_file >> json_data;
+    } catch (const std::exception& e) {
+        std::cerr << "JSON parse hatası: " << e.what() << std::endl;
+        return 1;
+    }
+    //std::cout << json_data.dump(4);
+
+    js::ASTNode* tl_node = js::AstNodeFactory::CreateFromJson(json_data);
+    std::cout << tl_node->toJson().dump(4);
+
+
+
+
+
+
+
+
+
+
+
+
+    /*std::string expr("if (d-(a+b)*c) { return 1 + 2 + 3 ; }");
     Lexer lexer(expr);
     lexer.Scan();
     for (auto token : lexer.Tokens())
@@ -16,7 +50,7 @@ int main () {
     auto ctx = ParserContext::Create(Parser::Instance());
     Parser::Initialize(tokens, ctx);
     Parser::Instance()->ParseInGlobalContextFromTokens();
-
+    */
 
     return 0;
 

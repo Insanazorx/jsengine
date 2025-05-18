@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace JSLib {
+namespace js {
 
     class Lexer {
     public:

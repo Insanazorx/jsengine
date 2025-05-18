@@ -1,5 +1,5 @@
 #pragma once
-namespace JSLib {
+namespace js {
     class Visitor {
     public:
         virtual ~Visitor() = default;

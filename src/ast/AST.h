@@ -2,16 +2,18 @@
 
 #pragma once
 
+#include <random>
+#include <sstream>
 #include <nlohmann/json.hpp>
-#include "LexerTypes.h"
-#include "EnumTypes.h"
-#include "Context.h"
-#include "Util.h"
-#include "Validator.h"
-#include "Forward.h"
+#include "../frontend/LexerTypes.h"
+#include "../frontend/EnumTypes.h"
+#include "../frontend/Context.h"
+#include "../Util.h"
+#include "../Validator.h"
+#include "../frontend/Forward.h"
 
 
-namespace JSLib {
+namespace js {
     class Validator;
     class ASTVisitor;
 
@@ -32,7 +34,9 @@ class Statement{
 ALL_STATEMENTS_FRIENDS;
 
 protected:
-    Statement() {}
+    Statement() {
+        m_id = GenerateUUID();
+    }
 public:
     virtual ~Statement() = default;
     static Statement* Create() {return new Statement();}
@@ -46,9 +50,9 @@ public:
 
     virtual ErrorOr<std::vector<Token>,SyntaxError> MakeTokenVector() {return ErrorOr<std::vector<Token>,SyntaxError>::Ok(m_tokens);}
 
-    virtual Statement* FocusOnTestStatement(ParserContext *context);
-    virtual Statement* FocusOnConsequentStatement(ParserContext *context);
-    virtual Statement* FocusOnAlternateStatement(ParserContext *context);
+    virtual Statement* FocusOnTestStatement(ParserContext *context) {};
+    virtual Statement* FocusOnConsequentStatement(ParserContext *context) {};
+    virtual Statement* FocusOnAlternateStatement(ParserContext *context) {};
 
 
 
@@ -89,8 +93,48 @@ public:
     std::vector<Token>& Tokens() {return m_tokens;}
     virtual int AwaitingExpressionCount() {return 0;} //-1 means no limit
 
+    [[nodiscard]] std::string ID() const {
+        return m_id;
+    }
+
+    void SetParentID(const std::string& id) {
+        m_id_of_parent = id;
+    }
+
+    [[nodiscard]] std::optional<std::string> ParentID() const {
+        return m_id_of_parent;
+    }
+
+    bool SearchForSpecificHolder ( StatementHolderType type, const std::string& parent_id) {
+        if (m_id_of_parent.has_value() && m_id_of_parent.value() != parent_id) {
+            return false;
+        }
+        for (auto holder: m_holders) {
+            if (holder->holder_type == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 protected:
+    std::string m_id;
+    std::optional<std::string> m_id_of_parent;
     std::vector<Token> m_tokens;
+    std::vector<StatementHolder*> m_holders;
+
+    static std::string GenerateUUID() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
+
+        std::stringstream ss;
+        ss << std::hex << std::setw(16) << std::setfill('0') << dis(gen);
+        return ss.str();
+    }
+
+
+
 };
 
     class BraceStatement: public Statement {
@@ -260,7 +304,7 @@ public:
     StatementType Type() override {return StatementType::BINARY_OP_STATEMENT;}
     ASTNode* GenerateASTImmediate(ParserContext* context) override;
 
-    ErrorOr<std::vector<Token>, SyntaxError> MakeTokenVector() override;
+    ErrorOr<std::vector<Token>, SyntaxError> MakeTokenVector() override {};
 
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
     int AwaitingExpressionCount() override {return 3;}
@@ -287,10 +331,9 @@ private:
 
 
 class ForStatement : public Statement {
-friend class Statement;
-
 private:
     ForStatement() = default;
+
 public:
     ~ForStatement() override = default;
 
@@ -302,7 +345,7 @@ public:
     void SetBody(Statement* body) {m_body = body;}
 
     TokenPosition Validate(Validator& validator) override {return validator.Visit(this);}
-    NodeBranchInfo* ParseTokens(ParserContext* context);
+    NodeBranchInfo* ParseTokens(ParserContext* context) {};
     StatementType Type() override {return StatementType::FOR_STATEMENT;}
     int AwaitingExpressionCount() override {return 4;}
 
@@ -422,10 +465,11 @@ private:
 
         std::string& Raw() { return m_raw;}
 
-        void SetValue(std::string&& raw) {
+        virtual void SetValue(std::string&& raw) {
             m_raw = raw;
         }
-        void SetValue(const std::string& raw) {
+
+        virtual void SetValue(const std::string& raw) {
             m_raw = raw;
         }
         void RemoveParent() {m_Parent = nullptr;}
@@ -435,7 +479,7 @@ private:
 
         virtual bool isVariableNode() {return false;}
         virtual bool isNumericNode() {return false;}
-        virtual bool isScopeNode() {return false;}
+        virtual bool isBlockNode() {return false;}
         virtual bool isBinaryOpNode() {return false;}
         virtual bool isUnaryOpNode() {return false;}
         virtual bool isAssignmentNode() {return false;}
@@ -478,28 +522,85 @@ private:
     std::optional<std::vector<Error>> m_errors {std::nullopt};
 };
 
-
-
-class ScopeNode : public ASTNode {
-public:
-    static ScopeNode* Create(){
-        return new ScopeNode();
+class ProgramNode : public ASTNode {
+private:
+    ProgramNode() = default;
+public :
+    static ProgramNode* Create() {
+        return new ProgramNode();
     }
-    ~ScopeNode() override = default;
-
-    bool isScopeNode() override {return true;}
+    ~ProgramNode() override = default;
 
     void AddChild(ASTNode* child) {
-        m_Children.push_back(child);
+        m_children.push_back(child);
+        child->AddParent(this);
+    }
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["NodeType"] = "Program";
+        for (const auto& child : m_children) {
+            jsonObj["children"].push_back(child->toJson());
+        }
+        return jsonObj;
+    }
+private:
+    std::vector<ASTNode*> m_children;
+};
+
+class BlockNode : public ASTNode {
+public:
+    static BlockNode* Create(){
+        return new BlockNode();
+    }
+    ~BlockNode() override = default;
+
+    bool isBlockNode() override {return true;}
+
+    void AddChild(ASTNode* child) {
+        m_children.push_back(child);
+    }
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["NodeType"] = "BlockStatement";
+        for (const auto& child : m_children) {
+            jsonObj["children"].push_back(child->toJson());
+        }
+        return jsonObj;
     }
 
 
 private:
-    std::vector<ASTNode*> m_Children;
-    ScopeNode() = default;
+    std::vector<ASTNode*> m_children;
+    BlockNode() = default;
 
 };
+    class ValueNode: public ASTNode {
+    private:
+        ValueNode() = default;
+    public:
+        static ValueNode* Create() {
+            return new ValueNode();
+        }
+        ~ValueNode() override = default;
+        void SetValue(std::string&& raw) override {m_raw = raw;}
+        void SetValue(const std::string& raw) override{m_raw = raw;}
+        bool isValueNode() {return true;}
+        nlohmann::json toJson() override {
+            nlohmann::json jsonObj;
+            jsonObj["raw"] = m_raw;
+            jsonObj["NodeType"] = "Value";
+            return jsonObj;
+        }
+    private:
+        std::string m_raw;
+    };
 
+
+class StringNode : public ASTNode {
+
+};
 class NumericNode : public ASTNode {
 private:
     NumericNode() = default;
@@ -526,6 +627,8 @@ private:
     int m_NumericValue {0};
 };
 
+
+
 class VariableNode : public ASTNode {
     public:
     static VariableNode* Create() {
@@ -535,16 +638,83 @@ class VariableNode : public ASTNode {
     nlohmann::json toJson() override {
         nlohmann::json jsonObj;
         jsonObj["raw"] = Raw();
+        jsonObj["NodeType"] = "Variable";
         return jsonObj;
     }
     ~VariableNode() = default;
     bool isVariableNode() override {return true;}
-    private:
+
+private:
     VariableNode() = default;
 };
 class UnaryOpNode : public ASTNode {};
-class AssignmentNode : public ASTNode {};
-class VariableDeclarationNode : public ASTNode {};
+class AssignmentNode : public ASTNode {
+private:
+    AssignmentNode() = default;
+public:
+    static AssignmentNode* Create() {
+        return new AssignmentNode();
+    }
+    ~AssignmentNode() override = default;
+    bool isAssignmentNode() override {return true;}
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["raw"] = Raw();
+        jsonObj["lvalue"] = m_lvalue->toJson();
+        jsonObj["rvalue"] = m_rvalue->toJson();
+        return jsonObj;
+    }
+
+    void SetLvalue(ASTNode* lvalue) {m_lvalue = lvalue; lvalue->AddParent(this);}
+    void SetRvalue(ASTNode* rvalue) {m_rvalue = rvalue; rvalue->AddParent(this);}
+
+private:
+    ASTNode* m_lvalue {nullptr};
+    ASTNode* m_rvalue {nullptr};
+};
+
+    enum class DeclarationKind {
+        CONST, VAR, LET, INVALID
+    };
+class VariableDeclarationNode : public ASTNode {
+public:
+    static VariableDeclarationNode* Create() {
+        return new VariableDeclarationNode();
+    }
+    ~VariableDeclarationNode() override = default;
+
+    void SetVariable(VariableNode* variable) {m_variable = variable; variable->AddParent(this);}
+    void SetKind (DeclarationKind kind) {m_kind = kind;}
+    void SetInit (ASTNode* init) {m_init = init; init->AddParent(this);}
+    bool isVariableDeclarationNode() override {return true;}
+
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["type"] = "VariableDeclarator";
+        jsonObj["kind"] = DeclarationKindToString(m_kind);
+        jsonObj["id"] = m_variable->toJson();
+        jsonObj["init"] = m_init->toJson();
+
+
+        return jsonObj;
+    }
+
+private:
+    static std::string DeclarationKindToString(DeclarationKind kind) {
+        switch (kind) {
+            case DeclarationKind::LET: return "let";
+            case DeclarationKind::VAR: return "var";
+            case DeclarationKind::CONST: return "const";
+            default: return "invalid";
+        }
+    }
+private:
+    VariableDeclarationNode() = default;
+    VariableNode* m_variable {nullptr};
+    DeclarationKind m_kind {DeclarationKind::INVALID};
+    ASTNode* m_init {nullptr};
+};
 
 class BinaryOpNode : public ASTNode{
 public:
@@ -575,10 +745,10 @@ public:
     }
 
     BinaryOpSubType SubType() {return m_SubType;}
-    void RemoveLhs() override {LhsNode = nullptr;}
-    void RemoveRhs() override {RhsNode = nullptr;}
-    void SetLhs(ASTNode* lhs) override {LhsNode = lhs;}
-    void SetRhs(ASTNode* rhs) override {RhsNode = rhs;}
+    void RemoveLhs() override {LhsNode = nullptr; LhsNode->RemoveParent();}
+    void RemoveRhs() override {RhsNode = nullptr; RhsNode->RemoveParent();}
+    void SetLhs(ASTNode* lhs) override {LhsNode = lhs; lhs->AddParent(this);}
+    void SetRhs(ASTNode* rhs) override {RhsNode = rhs; rhs->AddParent(this);}
     ASTNode* Lhs() override {return LhsNode;}
     ASTNode* Rhs() override {return RhsNode;}
 
@@ -590,7 +760,26 @@ private:
     ASTNode* RhsNode {nullptr};
 
 };
-    class BreakNode : public ASTNode {};
+    class BreakNode : public ASTNode {
+    private:
+        BreakNode() = default;
+
+    public:
+        static BreakNode* Create() {
+            return new BreakNode();
+        }
+        ~BreakNode() override = default;
+        void SetLabel(std::string&& label) {m_label = std::move(label);}
+        void SetLabel(const std::string& label) {m_label = label;}
+        nlohmann::json toJson() override {
+            nlohmann::json jsonObj;
+            jsonObj["NodeType"] = "break";
+            jsonObj["label"] = m_label;
+            return jsonObj;
+        }
+    private:
+        std::string m_label;
+    };
     class ContinueNode : public ASTNode {};
 
 class IfNode : public ASTNode {
@@ -604,13 +793,13 @@ public:
     void SetConsequentNode(ASTNode* ConsequentNode) override {Consequent = ConsequentNode;}
     void SetAlternateNode(ASTNode* AlternateNode) override {Alternate = AlternateNode;}
 
-    ASTNode* TestNode() {return Condition;}
-    ASTNode* ConsequentNode() {return Consequent;}
-    ASTNode* AlternateNode() {return Alternate;}
+    ASTNode* TestNode() const {return Condition;}
+    ASTNode* ConsequentNode() const {return Consequent;}
+    ASTNode* AlternateNode() const {return Alternate;}
 
     nlohmann::json toJson() override {
         nlohmann::json jsonObj;
-        jsonObj["raw"] = Raw();
+        jsonObj["type"] = "IfStatement";
         jsonObj["condition"] = Condition->toJson();
         jsonObj["consequent"] = Consequent->toJson();
         if (isAlternatePresent)
@@ -637,9 +826,29 @@ public:
         return new ForNode();
     }
 
+    void SetInitExpr(ASTNode* init) {m_init = init;}
+    void SetTestExpr(ASTNode* test) {m_test = test;}
+    void SetUpdateExpr(ASTNode* update) {m_update = update;}
+    void SetConsequentNode(ASTNode* consequent) override {m_consequent = consequent;}
+
+    nlohmann::json toJson() override {
+        nlohmann::json jsonObj;
+        jsonObj["NodeType"] = "ForStatement";
+        jsonObj["init"] = m_init->toJson();
+        jsonObj["test"] = m_test->toJson();
+        jsonObj["update"] = m_update->toJson();
+        jsonObj["consequent"] = m_consequent->toJson();
+        return jsonObj;
+    }
 private:
     ForNode() = default;
-    ~ForNode() = default;
+    ~ForNode() override = default;
+
+    ASTNode* m_init {nullptr};
+    ASTNode* m_test {nullptr};
+    ASTNode* m_update {nullptr};
+    ASTNode* m_consequent {nullptr};
+
 };
 class WhileNode : public ASTNode {
 public:
@@ -683,7 +892,7 @@ private:
         private:
         FunctionNode() = default;
         std::vector<VariableNode*> m_args;
-        ScopeNode* m_body;
+        BlockNode* m_body;
     };
 
 

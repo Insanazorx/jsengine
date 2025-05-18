@@ -3,7 +3,7 @@
 #include "EnumTypes.h"
 #include <string>
 
-namespace JSLib {
+namespace js {
     enum class TokenType{
         IF, FOR, DO,
         WHILE, BINARY_OP,
@@ -23,6 +23,13 @@ namespace JSLib {
         STATEMENT_HOLDER, END_OF_STATEMENT, VOID_TOKEN
     };
 
+    enum class StatementHolderType {
+        TEST, CONSEQUENT,
+        ALTERNATE, NOT_HOLDER,
+        BODY, ARGUMENTS,
+        UPDATE, INIT
+    };
+
     struct TokenPosition {
         int Line {0};
         int Pos {0};
@@ -30,12 +37,14 @@ namespace JSLib {
 
     struct Token {
         Token() = default;
-        ~Token() = default;
+        virtual ~Token() = default;
 
         TokenType Type;
         std::string Lexeme;
         bool Analyzed {false};
         TokenPosition Position;
+
+        StatementHolderType holder_type {StatementHolderType::NOT_HOLDER};
 
         Token(const Token& other) {
             Type = other.Type;
@@ -53,8 +62,8 @@ namespace JSLib {
         }
         ~StatementHolder() = default;
 
-        StatementType allowed_types {StatementType::ANY_OF_STATEMENT_TYPES};
 
+        StatementType allowed_types {StatementType::ANY_OF_STATEMENT_TYPES};
     };
 
     struct EndOfStatement: Token {

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <string>
-#include "Debug.h"
+#include "debug.h"
 #include <utility>
 
 // Basit ErrorOr sınıfı. Bir T değeri veya hata mesajı barındırır.

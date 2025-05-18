@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ErrorOr.h"
-#include "LexerTypes.h"
-#include "Forward.h"
-namespace JSLib {
+#include "frontend/ErrorOr.h"
+#include "frontend/LexerTypes.h"
+#include "frontend/Forward.h"
+namespace js {
     using namespace Util;
     enum class SyntaxErrorType {
         MISSING_BRACKET
@@ -48,7 +48,7 @@ namespace JSLib {
         virtual TokenPosition Visit(UnaryOpNode* node);
         virtual TokenPosition Visit(AssignmentNode* node);
         virtual TokenPosition Visit(VariableDeclarationNode* node);
-        virtual TokenPosition Visit(ScopeNode* node);
+        virtual TokenPosition Visit(BlockNode* node);
 
     };
     class SyntaxValidator : public Validator {
