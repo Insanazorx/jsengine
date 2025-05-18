@@ -1,0 +1,13 @@
+# ninja log v6
+8	1736	1747592746442632397	CMakeFiles/js.dir/src/frontend/Parser.cpp.o	6d328011a089f61c
+20	1638	1746019365328810387	CMakeFiles/js.dir/src/frontend/AST.cpp.o	d0da69661a5d8eb9
+12	1120	1742396751401703077	CMakeFiles/js.dir/src/Lexer.cpp.o	cdc24db201af9e5d
+8	2004	1747592746442451480	CMakeFiles/js.dir/src/ast/AST.cpp.o	868f3c9fdd1772e0
+8	2064	1747592746442085855	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
+5	1267	1742396887313188842	CMakeFiles/js.dir/src/AST.cpp.o	1cdfbe4ef6e79d93
+12	1251	1747434468992152649	CMakeFiles/js.dir/src/ast/ASTNodeFactory.cpp.o	436ede29a72da232
+8	755	1746974686127092494	CMakeFiles/js.dir/src/frontend/Lexer.cpp.o	8ac9c66d89c285d
+9	659	1746974686128025883	CMakeFiles/js.dir/src/SourceCode.cpp.o	2102b554a565738c
+4	593	1747523126193187325	CMakeFiles/js.dir/src/Validator.cpp.o	37adafce29db97e6
+8	163	1747602322865034939	build.ninja	8c38e83319488d73
+2064	2165	1747592748498492862	js	61fafd1354b8359d
