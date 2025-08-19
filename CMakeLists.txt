@@ -12,12 +12,9 @@ add_executable(js src/main.cpp
         src/ast/AST.cpp
         src/frontend/Lexer.h
         src/frontend/Lexer.cpp
-        src/frontend/Parser.cpp
-        src/frontend/Parser.h
         src/frontend/LexerTypes.h
         src/frontend/debug.h
         src/frontend/EnumTypes.h
-        src/frontend/Context.h
         src/Util.h
         src/Visitor.h
         src/Validator.h
@@ -27,8 +24,14 @@ add_executable(js src/main.cpp
         src/frontend/ErrorOr.h
         src/frontend/Forward.h
         src/ast/ASTNodeFactory.h
-        src/interpreter/BytecodeGenerator.h
-        src/interpreter/InterpreterVM.h)
+        src/interpreter/Bytecode/BytecodeGenerator.h
+        src/interpreter/InterpreterVM.h
+        src/interpreter/RuntimeObjects/ExecutionContext.h
+        src/interpreter/RuntimeObjects/RuntimeObject.h
+        src/interpreter/RuntimeObjects/Value.h
+        src/interpreter/RuntimeObjects/JSObject.h
+        src/interpreter/Bytecode/BytecodeStream.h
+        src/interpreter/Bytecode/Label.h)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

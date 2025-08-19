@@ -51,6 +51,12 @@ namespace js {
                 return node;
             }
 
+            if (type == "ExpressionStatement") {
+                auto node = ExpressionStatement::Create();
+                node->SetExpression(CreateFromJson(ast_json["expression"]));
+                return node;
+            }
+
             if (type == "VariableDeclaration") {
                 auto node = VariableDeclarationNode::Create();
                 auto kind_string = ast_json["kind"];
@@ -110,6 +116,44 @@ namespace js {
 
             if (type == "BreakStatement") {
                 auto node = BreakNode::Create();
+                return node;
+            }
+
+            if (type == "FunctionDeclaration") {
+                auto node = FunctionDeclaration::Create();
+                for (const auto& arg : ast_json["params"]) {
+                    auto arg_node = VariableNode::Create();
+                    arg_node->SetValue(arg["name"]);
+                    node->AddArgument(arg_node);
+                }
+
+                bool isGenerator = ast_json.contains("generator") && ast_json["generator"].get<bool>();
+                bool isAsync = ast_json.contains("async") && ast_json["async"].get<bool>();
+                bool isExpression = ast_json.contains("expression") && ast_json["expression"].get<bool>();
+
+                if (isGenerator) {
+                    node->SetGenerator();
+                }
+                if (isAsync) {
+                    node->SetAsync();
+                }
+                if (isExpression) {
+                    node->SetExpression();
+                }
+
+
+                if (!ast_json["body"].is_null()) {
+                    node->SetBody(CreateFromJson(ast_json["body"]));
+                }
+
+                return node;
+            }
+
+            if (type == "ReturnStatement") {
+                auto node = ReturnNode::Create();
+                if (!ast_json["argument"].is_null()) {
+                    node->SetConsequentNode(CreateFromJson(ast_json["argument"]));
+                }
                 return node;
             }
 

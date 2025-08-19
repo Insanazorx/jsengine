@@ -11,6 +11,7 @@
 #include "../Util.h"
 #include "../Validator.h"
 #include "../frontend/Forward.h"
+#include "../interpreter/Bytecode/BytecodeGenerator.h"
 
 
 namespace js {
@@ -477,6 +478,11 @@ private:
         ASTNode* Parent() {return m_Parent;}
         void AddParent(ASTNode* parent) {m_Parent = parent;}
 
+
+        virtual Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator& generator) {
+            return Interpreter::GenerateBytecodeResult::UNSPECIFIED_NODE;
+        }
+
         virtual bool isVariableNode() {return false;}
         virtual bool isNumericNode() {return false;}
         virtual bool isBlockNode() {return false;}
@@ -490,7 +496,8 @@ private:
         virtual bool isForInNode() {return false;}
         virtual bool isForOfNode() {return false;}
         virtual bool isForAwaitOfNode() {return false;}
-        virtual bool isFunctionNode() {return false;}
+        virtual bool isFunctionDeclaration() {return false;}
+        virtual bool isCallExpression() {return false;}
         virtual bool isArrowFunctionNode() {return false;}
         virtual bool isAsyncFunctionNode() {return false;}
         virtual bool isGeneratorFunctionNode() {return false;}
@@ -728,6 +735,9 @@ public:
 
     void SetSubType(BinaryOpSubType OpType) {m_SubType = OpType;}
 
+    Interpreter::GenerateBytecodeResult GenerateBytecode (Interpreter::BytecodeGenerator& generator) override {
+
+    }
     nlohmann::json toJson() override {
         nlohmann::json jsonObj;
         jsonObj["raw"] = Raw();
@@ -743,6 +753,8 @@ public:
 
         return jsonObj;
     }
+
+
 
     BinaryOpSubType SubType() {return m_SubType;}
     void RemoveLhs() override {LhsNode = nullptr; LhsNode->RemoveParent();}
@@ -882,17 +894,104 @@ private:
         ASTNode* m_expr;
     };
 
-    class FunctionNode : public ASTNode {
-        public:
-        static FunctionNode* Create() {
-            return new FunctionNode();
+    class FunctionDeclaration : public ASTNode {
+    public:
+        static FunctionDeclaration* Create() {
+            return new FunctionDeclaration();
         }
-        ~FunctionNode() override = default;
+        ~FunctionDeclaration() override = default;
+
+        void AddArgument(ASTNode* arg) {
+            m_args.push_back(arg);
+            arg->AddParent(this);
+        }
+
+        void SetBody(ASTNode* body) {
+            m_body = body;
+            body->AddParent(this);
+        }
+
+        void SetAsync() {
+            m_isAsync = true;
+        }
+        void SetGenerator() {
+            m_isGenerator = true;
+        }
+        void SetExpression() {
+            m_isExpression = true;
+        }
+
+        Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator& generator) {
+
+        }
+    private:
+        FunctionDeclaration() = default;
+        std::vector<ASTNode*> m_args;
+        ASTNode* m_body;
+        bool m_isAsync {false};
+        bool m_isGenerator {false};
+        bool m_isExpression {false};
+
+
+        bool isFunctionDeclaration() override {return true;}
+
+        nlohmann::json toJson() override {
+            nlohmann::json jsonObj;
+            jsonObj["NodeType"] = "FunctionDeclaration";
+            jsonObj["isAsync"] = m_isAsync;
+            jsonObj["isGenerator"] = m_isGenerator;
+            jsonObj["isExpression"] = m_isExpression;
+            jsonObj["arguments"] = nlohmann::json::array();
+            for (const auto& arg : m_args) {
+                jsonObj["arguments"].push_back(arg->toJson());
+            }
+            if (m_body) {
+                jsonObj["body"] = m_body->toJson();
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+            return jsonObj;
+        }
+
+    };
+
+    class ExpressionStatement: public ASTNode {
+    public:
+        static ExpressionStatement* Create() {
+            return new ExpressionStatement();
+        }
+        ~ExpressionStatement() override = default;
+
+        void SetExpression(ASTNode* expression) {
+            m_expression = expression;
+            expression->AddParent(this);
+        }
+
+        ASTNode* Expression() {return m_expression;}
+
+        nlohmann::json toJson() override {
+            nlohmann::json jsonObj;
+            jsonObj["NodeType"] = "ExpressionStatement";
+            jsonObj["expression"] = m_expression->toJson();
+            return jsonObj;
+        }
+        ASTNode* m_expression {nullptr};
+        bool isExpressionStatement() {return true;}
+    private:
+        ExpressionStatement() = default;
+    };
+
+    class CallExpression : public ASTNode {
+        public:
+        static CallExpression* Create() {
+            return new CallExpression();
+        }
+        ~CallExpression() override = default;
 
         private:
-        FunctionNode() = default;
+        CallExpression() = default;
+
         std::vector<VariableNode*> m_args;
-        BlockNode* m_body;
     };
 
 
