@@ -16,7 +16,7 @@ int main () {
         std::cerr << "Error opening file: " << file_path << std::endl;
         return 1;
     }
-
+    std::cout << "porno";
     nlohmann::json json_data;
     try {
         ast_file >> json_data;
