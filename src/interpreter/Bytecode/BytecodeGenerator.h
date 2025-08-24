@@ -11,7 +11,7 @@ namespace js {
             UNSPECIFIED_NODE = 2
         };
 
-        
+
 
         class BytecodeGenerator {
         public:
@@ -60,7 +60,11 @@ namespace js {
             BytecodeStream* ExtractBytecodeStream() const {
                 return m_BytecodeStream;
             }
-            template <typename... Args> void BuildCommand(OpCode op, Args... args);
+            template <typename... Args> void BuildCommand(OpCode op, Args... args) {
+                BytecodeStream* stream = BytecodeStream::Create();
+                *stream << static_cast<BytecodeStream::Bytecode>(op);
+                (stream << ... << static_cast<BytecodeStream::Bytecode>(args));
+            }
 
         private:
             void emitBytecode (int opCode);
