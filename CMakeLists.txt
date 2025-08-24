@@ -9,7 +9,6 @@ find_package(CURL REQUIRED)
 
 add_executable(js src/main.cpp
         src/ast/AST.h
-        src/ast/AST.cpp
         src/frontend/Lexer.h
         src/frontend/Lexer.cpp
         src/frontend/LexerTypes.h
@@ -25,13 +24,15 @@ add_executable(js src/main.cpp
         src/frontend/Forward.h
         src/ast/ASTNodeFactory.h
         src/interpreter/Bytecode/BytecodeGenerator.h
-        src/interpreter/InterpreterVM.h
+        src/interpreter/VM.h
         src/interpreter/RuntimeObjects/ExecutionContext.h
         src/interpreter/RuntimeObjects/RuntimeObject.h
         src/interpreter/RuntimeObjects/Value.h
         src/interpreter/RuntimeObjects/JSObject.h
         src/interpreter/Bytecode/BytecodeStream.h
-        src/interpreter/Bytecode/Label.h)
+        src/interpreter/Bytecode/Label.h
+        src/interpreter/Bytecode/BytecodeGenerator.cpp
+        src/interpreter/Register.h)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

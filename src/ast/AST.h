@@ -7,7 +7,6 @@
 #include <nlohmann/json.hpp>
 #include "../frontend/LexerTypes.h"
 #include "../frontend/EnumTypes.h"
-#include "../frontend/Context.h"
 #include "../Util.h"
 #include "../Validator.h"
 #include "../frontend/Forward.h"
@@ -88,7 +87,7 @@ public:
     virtual bool isImmediate(){return false;}
 
     virtual void awaitExpression(ParserContext* context) {
-        context->PushToWaitingStack(this);
+
     }
 
     std::vector<Token>& Tokens() {return m_tokens;}
@@ -512,22 +511,6 @@ private:
 
     };
 
-class NodeBranchInfo {
-
-private:
-    NodeBranchInfo() = default;
-public:
-    static NodeBranchInfo* Create() {
-        return new NodeBranchInfo();
-    }
-    ~NodeBranchInfo() = default;
-    ASTNode* Node() {return m_node;}
-    void SetNode(ASTNode* node) {m_node = node;}
-    void SetPositions(std::vector<Error>& errors) {m_errors = errors;}
-private:
-    ASTNode* m_node {nullptr};
-    std::optional<std::vector<Error>> m_errors {std::nullopt};
-};
 
 class ProgramNode : public ASTNode {
 private:
@@ -551,6 +534,9 @@ public :
         }
         return jsonObj;
     }
+    Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator& generator) override{
+                return Interpreter::GenerateBytecodeResult::UNSPECIFIED_NODE;
+            }
 private:
     std::vector<ASTNode*> m_children;
 };
@@ -690,7 +676,7 @@ public:
     }
     ~VariableDeclarationNode() override = default;
 
-    void SetVariable(VariableNode* variable) {m_variable = variable; variable->AddParent(this);}
+    void SetVariable(ASTNode* variable) {m_variable = variable; variable->AddParent(this);}
     void SetKind (DeclarationKind kind) {m_kind = kind;}
     void SetInit (ASTNode* init) {m_init = init; init->AddParent(this);}
     bool isVariableDeclarationNode() override {return true;}
@@ -718,10 +704,12 @@ private:
     }
 private:
     VariableDeclarationNode() = default;
-    VariableNode* m_variable {nullptr};
+    ASTNode* m_variable {nullptr};
     DeclarationKind m_kind {DeclarationKind::INVALID};
     ASTNode* m_init {nullptr};
 };
+
+
 
 class BinaryOpNode : public ASTNode{
 public:
@@ -736,7 +724,8 @@ public:
     void SetSubType(BinaryOpSubType OpType) {m_SubType = OpType;}
 
     Interpreter::GenerateBytecodeResult GenerateBytecode (Interpreter::BytecodeGenerator& generator) override {
-
+        generator.BuildCommand(Interpreter::BytecodeGenerator::OpCode::LOAD_STORE, Interpreter::BytecodeGenerator::OpCodeType::LOAD, 0xFF, 0x2);
+        return Interpreter::GenerateBytecodeResult::SUCCESS;
     }
     nlohmann::json toJson() override {
         nlohmann::json jsonObj;
@@ -921,7 +910,8 @@ private:
             m_isExpression = true;
         }
 
-        Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator& generator) {
+        Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator& generator) override {
+            return Interpreter::GenerateBytecodeResult::UNSPECIFIED_NODE;
 
         }
     private:

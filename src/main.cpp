@@ -32,6 +32,22 @@ int main () {
 
 
 
+    auto generator = js::Interpreter::BytecodeGenerator::Create();
+
+    auto node = js::BinaryOpNode::Create();
+
+    node->GenerateBytecode(*generator);
+
+    auto result = generator->ExtractBytecodeStream();
+
+
+    for (result->begin(); result->end() != result->begin(); ++result->begin()) {
+        std::cout << "Bytecode: " << static_cast<int>(*(result->begin())) << std::endl;
+    }
+
+
+
+
 
 
 
