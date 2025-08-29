@@ -4,8 +4,7 @@
 #include <string>
 
 #include "./ast/ASTNodeFactory.h"
-
-
+#include "interpreter/VM/VM.h"
 
 
 int main () {
@@ -40,10 +39,10 @@ int main () {
 
     auto result = generator->ExtractBytecodeStream();
 
+    (*result).print_bytecodes();
 
-    for (result->begin(); result->end() != result->begin(); ++result->begin()) {
-        std::cout << "Bytecode: " << static_cast<int>(*(result->begin())) << std::endl;
-    }
+
+    auto vm = new js::Interpreter::VM(result);
 
 
 

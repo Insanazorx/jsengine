@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
 namespace js {
@@ -13,6 +14,17 @@ namespace js {
                 return new BytecodeStream();
             }
             ~BytecodeStream() = default;
+
+            Bytecode at(size_t index) const {
+                if (index < m_bytecodes.size()) {
+                    return m_bytecodes[index];
+                }
+                throw std::out_of_range("Index out of range");
+            }
+
+            Bytecode operator[] (size_t index) const {
+                return at(index);
+            }
 
             BytecodeStream* operator>>(const std::vector<Bytecode>& bytecodes) {
                 std::copy(bytecodes.begin(), bytecodes.end(), std::back_inserter(m_bytecodes));
@@ -44,6 +56,9 @@ namespace js {
             auto end() {
                 return m_bytecodes.end();
             }
+
+
+
         private:
             std::vector<Bytecode> m_bytecodes;
         };

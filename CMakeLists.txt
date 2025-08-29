@@ -24,7 +24,7 @@ add_executable(js src/main.cpp
         src/frontend/Forward.h
         src/ast/ASTNodeFactory.h
         src/interpreter/Bytecode/BytecodeGenerator.h
-        src/interpreter/VM.h
+        src/interpreter/VM/VM.h
         src/interpreter/RuntimeObjects/ExecutionContext.h
         src/interpreter/RuntimeObjects/RuntimeObject.h
         src/interpreter/RuntimeObjects/Value.h
@@ -32,7 +32,10 @@ add_executable(js src/main.cpp
         src/interpreter/Bytecode/BytecodeStream.h
         src/interpreter/Bytecode/Label.h
         src/interpreter/Bytecode/BytecodeGenerator.cpp
-        src/interpreter/Register.h)
+        src/interpreter/VM/Register.h
+        src/interpreter/VM/VM.cpp
+        src/interpreter/VM/ExecutionState.h
+        src/interpreter/Bytecode/Bytecodes.h)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

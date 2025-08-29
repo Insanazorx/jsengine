@@ -724,7 +724,7 @@ public:
     void SetSubType(BinaryOpSubType OpType) {m_SubType = OpType;}
 
     Interpreter::GenerateBytecodeResult GenerateBytecode (Interpreter::BytecodeGenerator& generator) override {
-        generator.BuildCommand(Interpreter::BytecodeGenerator::OpCode::LOAD_STORE, Interpreter::BytecodeGenerator::OpCodeType::LOAD, 0xFF, 0x2);
+        ;
         return Interpreter::GenerateBytecodeResult::SUCCESS;
     }
     nlohmann::json toJson() override {
