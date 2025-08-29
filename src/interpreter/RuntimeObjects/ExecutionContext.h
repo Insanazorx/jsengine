@@ -20,7 +20,7 @@ namespace js {
             ~ExecutionContext() override = default;
 
 
-
+            
         };//class ExecutionContext
 
         class Environment : public RuntimeObject {
@@ -34,7 +34,9 @@ namespace js {
 
 
         private:
-            std::vector<Value*> m_variables;
+            std::vector<Value> m_variables;
+            Environment* m_outerEnvironment {nullptr};
+            Environment* m_innerEnvironment {nullptr};
 
         };
 

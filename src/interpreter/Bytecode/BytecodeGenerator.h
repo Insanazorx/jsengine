@@ -11,36 +11,14 @@ namespace js {
             UNSPECIFIED_NODE = 2
         };
 
+
+
         class BytecodeGenerator {
-        private:
-            enum class OpCode : uint64_t{
-                BRANCH,
-                LOAD_STORE,
-                ARITHMETIC,
-                LOAD_OBJECT_PROP,
-                RETURN,
-                NOP,
-            };
-            enum class OpCodeType : uint64_t {
+        public:
 
-                LOAD,
-                STORE,
 
-                ADD,
-                SUBTRACT,
-                MULTIPLY,
-                DIVIDE,
+            enum class OpCode : uint8_t {
 
-                JUMP,
-                JUMP_IF_TRUE,
-                JUMP_IF_FALSE,
-                JUMP_IF_ZERO,
-
-                CALL_FUNCTION,
-
-                LOAD_NAMED_PROPERTY,
-                LOAD_KEYED_PROPERTY,
-                LOAD_INDEXED_PROPERTY
             };
         private:
             BytecodeGenerator() = default;
@@ -56,12 +34,18 @@ namespace js {
             BytecodeStream* ExtractBytecodeStream() const {
                 return m_BytecodeStream;
             }
+            template <typename... Args> void BuildCommand(OpCode op, Args... args) {
+                BytecodeStream* stream = BytecodeStream::Create();
+                *stream << static_cast<BytecodeStream::Bytecode>(op);
+                std::initializer_list<int>{(*stream << static_cast<BytecodeStream::Bytecode>(args), 0)...};
+            }
 
         private:
-            void emitBytecode ();
+            void emitBytecode (int opCode);
             void emitSingleCommand();
 
-            template <typename... Args> void BuildCommand(Args... args);
+
+
 
         private:
             BytecodeStream* m_BytecodeStream {BytecodeStream::Create()};
@@ -69,3 +53,4 @@ namespace js {
         }; // class BytecodeGenerator
     };  // namespace Interpreter
 }; // namespace js
+
