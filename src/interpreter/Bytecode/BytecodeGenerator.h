@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Bytecodes.h"
 #include "BytecodeStream.h"
 
 
@@ -30,6 +31,8 @@ namespace js {
             ~BytecodeGenerator() {
                 delete m_BytecodeStream;
             }
+
+            X_BYTECODES(HANDLER_PROTOTYPES)
 
             BytecodeStream* ExtractBytecodeStream() const {
                 return m_BytecodeStream;

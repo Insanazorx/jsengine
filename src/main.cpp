@@ -39,10 +39,6 @@ int main () {
 
     auto result = generator->ExtractBytecodeStream();
 
-    (*result).print_bytecodes();
-
-
-    auto vm = new js::Interpreter::VM(result);
 
 
 
