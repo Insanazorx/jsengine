@@ -29,8 +29,8 @@ namespace js {
     X(MULTIPLY, 0x06, ARG_TYPE::REGISTER)                                                               \
     X(DIVIDE, 0x07, ARG_TYPE::REGISTER)                                                                 \
     X(JUMP, 0x08, ARG_TYPE::ADDRESS)                                                                    \
-    X(COMPARE, 0x09)                                                                                    \
-    X(TEST, 0x0A)                                                                                       \
+    X(COMPARE, 0x09, ARG_TYPE::REGISTER)                                                                \
+    X(TEST, 0x0A, ARG_TYPE::REGISTER)                                                                   \
     X(JUMP_IF_EQUAL, 0x0B, ARG_TYPE::ADDRESS)                                                           \
     X(JUMP_IF_ZERO, 0x0C, ARG_TYPE::ADDRESS)                                                            \
     X(JUMP_UNLESS_ZERO,0xD, ARG_TYPE::ADDRESS)                                                          \
@@ -41,14 +41,21 @@ namespace js {
     X(CREATE_OBJECT, 0x12)                                                                              \
     X(CREATE_CONTEXT, 0x13)                                                                             \
     X(NOP, 0x14)                                                                                        \
-    X(RETURN, 0x15)
+    X(RETURN, 0x15)                                                                                     \
+    X(XOR, 0x16, ARG_TYPE::REGISTER)                                                                    \
+    X(AND, 0x17, ARG_TYPE::REGISTER)                                                                    \
+    X(OR, 0x18, ARG_TYPE::REGISTER)                                                                     \
+    X(NEGATE, 0x19, ARG_TYPE::REGISTER)                                                                 \
+    X(MODULO, 0x1A, ARG_TYPE::REGISTER)                                                                 \
+    X(SHIFT_LEFT, 0x1B, ARG_TYPE::REGISTER, ARG_TYPE::IMMEDIATE)                                        \
+    X(SHIFT_RIGHT, 0x1C, ARG_TYPE::REGISTER, ARG_TYPE::IMMEDIATE)
 
 #define ENUMERATE_BYTECODES(name, code, ...) name = code,
 
-#define DECLARE_HANDLER(name, ...) void BytecodeGenerator:: ##name##_HANDLER (__VA_ARGS__)
+#define DECLARE_HANDLER(name, ...) void name##_HANDLER (__VA_ARGS__)
 #define HANDLER_PROTOTYPE(name, ...) void name##_HANDLER (__VA_ARGS__);
 
-        enum class OpCode : uint8_t {
+        enum class Opcode : uint8_t {
             X_BYTECODES(ENUMERATE_BYTECODES)
         };
 

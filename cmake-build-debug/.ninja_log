@@ -27,3 +27,5 @@
 13	862	1756586320367643859	CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o	d48593f524182f0
 12	2127	1756586320366242929	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
 2127	2263	1756586322481344996	js	542f96144b9232da
+14	598	1756672789679374513	CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o	ba04ba52c88117b0
+13	1875	1756672789679009142	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
