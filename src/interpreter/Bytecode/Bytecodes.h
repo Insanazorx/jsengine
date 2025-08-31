@@ -15,6 +15,11 @@ namespace js {
             SLOT,
             NAME
         };
+        using Slot = uint8_t;
+        using Address = uint32_t;
+        using Object_Descriptor = uint16_t;
+        using Name = std::string;
+
 #define X_BYTECODES(X)                                                                                  \
     X(LOAD_ACCUMULATOR_REG, 0x01 ,ARG_TYPE::REGISTER)                                                   \
     X(LOAD_ACCUMULATOR_IMM, 0x02, ARG_TYPE::IMMEDIATE)                                                  \
@@ -39,30 +44,9 @@ namespace js {
     X(RETURN, 0x15)
 
 #define ENUMERATE_BYTECODES(name, code, ...) name = code,
-#define GET_ARGS(name, code, ...) __VA_ARGS__
 
-#define DECLARE_HANDLER(name, code ,...) void name##_HANDLER (__VA_ARGS__);
-
-template <ARG_TYPE... T> struct ArgTypeToCType;
-template <> struct ArgTypeToCType<ARG_TYPE::REGISTER> {using type = Register&;};
-template <> struct ArgTypeToCType<ARG_TYPE::IMMEDIATE> {using type = Value&;};
-template <> struct ArgTypeToCType<ARG_TYPE::ADDRESS> {using type = uint32_t;};
-template <> struct ArgTypeToCType<ARG_TYPE::OBJECT_DESCRIPTOR> {using type = uint32_t;};
-template <> struct ArgTypeToCType<ARG_TYPE::SLOT> {using type = uint8_t;};
-        template <> struct ArgTypeToCType<ARG_TYPE::NAME> {using type = std::string&;};
-        template <> struct ArgTypeToCType<> {using type = void;};
-
-#define ARG_TO_CTYPE(arg) typename ArgTypeToCType<arg>::type
-#define MAP_ARG_TO_CTYPE_1(a) ARG_TO_CTYPE(a)
-#define MAP_ARG_TO_CTYPE_2(a, b) ARG_TO_CTYPE(a), ARG_TO_CTYPE(b)
-#define MAP_ARG_TO_CTYPE_3(a, b, c) ARG_TO_CTYPE(a), ARG_TO_CTYPE(b), ARG_TO_CTYPE(c)
-#define MAP_ARG_TO_CTYPE_4(a, b, c, d) ARG_TO_CTYPE(a), ARG_TO_CTYPE(b), ARG_TO_CTYPE(c), ARG_TO_CTYPE(d)
-#define GET_ARG_COUNT(N, ...) \
-         __VA_OPT__(1) __VA_ARGS__ 1 + GET_ARG_COUNT(__VA_ARGS__)
-
-#define SELECT_MAP(N) MAP_ARG_TO_CTYPE_##N
-#define EXPAND(x) x
-#define HANDLER_PROTOTYPES(name, code, ...) DECLARE_HANDLER(name, code, EXPAND(SELECT_MAP(GET_ARG_COUNT(__VA_ARGS__))))
+#define DECLARE_HANDLER(name, ...) void BytecodeGenerator:: ##name##_HANDLER (__VA_ARGS__)
+#define HANDLER_PROTOTYPE(name, ...) void name##_HANDLER (__VA_ARGS__);
 
         enum class OpCode : uint8_t {
             X_BYTECODES(ENUMERATE_BYTECODES)
