@@ -13,7 +13,8 @@ namespace js {
             ADDRESS,
             OBJECT_DESCRIPTOR,
             SLOT,
-            NAME
+            NAME,
+            VARIADIC
         };
         using Slot = uint8_t;
         using Address = uint32_t;
@@ -38,7 +39,7 @@ namespace js {
     X(LOAD_NAMED_PROPERTY, 0x0F, ARG_TYPE::OBJECT_DESCRIPTOR, ARG_TYPE::NAME)                           \
     X(LOAD_KEYED_PROPERTY, 0x10, ARG_TYPE::OBJECT_DESCRIPTOR, ARG_TYPE::REGISTER)                       \
     X(LOAD_INDEXED_PROPERTY, 0x11, ARG_TYPE::OBJECT_DESCRIPTOR, ARG_TYPE::SLOT)                         \
-    X(CREATE_OBJECT, 0x12)                                                                              \
+    X(CREATE_OBJECT, 0x12, ARG_TYPE::NAME)                                                              \
     X(CREATE_CONTEXT, 0x13)                                                                             \
     X(NOP, 0x14)                                                                                        \
     X(RETURN, 0x15)                                                                                     \
@@ -47,8 +48,12 @@ namespace js {
     X(OR, 0x18, ARG_TYPE::REGISTER)                                                                     \
     X(NEGATE, 0x19, ARG_TYPE::REGISTER)                                                                 \
     X(MODULO, 0x1A, ARG_TYPE::REGISTER)                                                                 \
-    X(SHIFT_LEFT, 0x1B, ARG_TYPE::REGISTER, ARG_TYPE::IMMEDIATE)                                        \
-    X(SHIFT_RIGHT, 0x1C, ARG_TYPE::REGISTER, ARG_TYPE::IMMEDIATE)
+    X(SHIFT_LEFT, 0x1B, ARG_TYPE::IMMEDIATE)                                                            \
+    X(SHIFT_RIGHT, 0x1C, ARG_TYPE::IMMEDIATE)                                                           \
+    X(CREATE_FUNCTION, 0x1D, ARG_TYPE::NAME)                                                            \
+    X(CREATE_ARRAY, 0x1E, ARG::TYPE NAME)                                                               \
+    X(SAVE_STATE, 0x1F)                                                                                 \
+    X(RESTORE_STATE, 0x20)
 
 #define ENUMERATE_BYTECODES(name, code, ...) name = code,
 

@@ -3,15 +3,18 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "VMObject.h"
+
 namespace js {
     namespace Interpreter {
-        class Register {
-        private:
+        class Register : public VMObject {
+        protected:
             //for allocating specific register
-            explicit Register(uint8_t reg_id): m_id(reg_id), in_use(true) {}
+            explicit Register(VM& vm,uint8_t reg_id) : VMObject(vm), m_id(reg_id), in_use(true) {
+            }
 
             //for allocating random register
-            Register() : m_id(0), in_use(true) {
+            Register(VM& vm) : VMObject(vm), in_use(true) {
                 srand(time(NULL));
                 m_id = rand() % 256;
             }
@@ -20,13 +23,13 @@ namespace js {
             Register& operator=(const Register&) = default;
             Register(Register&&) = delete;
 
-            ~Register() = default;
+            virtual ~Register() = default;
 
-            static Register* CreateWithRandomId() {
-                return new Register();
+            static Register* CreateWithRandomId(VM& vm) {
+                return new Register(vm);
             }
-            static Register* CreateWithSpecificId(uint8_t reg_id) {
-                return new Register(reg_id);
+            static Register* CreateWithSpecificId(VM& vm, uint8_t reg_id) {
+                return new Register(vm, reg_id);
             }
             void SetValue(uint64_t val) {m_value = val;}
             uint64_t GetValue() const {return m_value;}
@@ -34,33 +37,52 @@ namespace js {
             virtual uint8_t Id() const {return m_id;}
             virtual bool IsInUse() const {return in_use;}
             void SetInUse(bool use) {in_use = use;}
-        private:
+        protected:
             uint64_t m_value {0};
             uint8_t m_id {0};
             bool in_use {false};
 
 
         };
-        class ProgramCounter {
-        private:
-            explicit ProgramCounter(uint32_t addr): m_address(addr) {}
+        class ProgramCounter final : public Register {
         public:
-            ProgramCounter(const ProgramCounter&) = delete;
-            ProgramCounter& operator=(const ProgramCounter&) = delete;
-            ProgramCounter(ProgramCounter&&) = delete;
-            ~ProgramCounter() = default;
-            static ProgramCounter* Create(uint32_t addr) {
-                return new ProgramCounter(addr);
-            }
-            bool IsInUse() const override {return true;}
+            ProgramCounter() : Register(vm, 0xFE) {}; // PC does not need a VM reference
+            ~ProgramCounter() override = default;
 
+            bool IsInUse() const override {return true;}
             void SetAddress(uint32_t addr) {m_address = addr;}
             uint32_t GetAddress() const {return m_address;}
+            void Advance() {m_address++;}
+
         private:
             uint32_t m_address {0};
+        };
+        class Accumulator final : public Register {
+        public:
+            Accumulator(VM& vm) : Register(vm, 0) {};
+            ~Accumulator() override = default;
+            bool IsInUse() const override {return true;}
+            void Reset() {m_value = 0;}
+            void add_to_value(Register*& reg) {m_value += reg->GetValue();}
+            void subtract_from_value(Register*& reg) {m_value -= reg->GetValue();}
+            void multiply_with_value(Register*& reg) {m_value *= reg->GetValue();}
+            void divide_with_value(Register*& reg) {m_value /= reg->GetValue();}
+            void xor_with_value(Register*& reg) {m_value ^= reg->GetValue();}
+            void and_with_value(Register*& reg) {m_value &= reg->GetValue();}
+            void or_with_value(Register*& reg) {m_value |= reg->GetValue();}
+            void negate_value() {m_value = -m_value;}
+            void modulo_with_value(Register*& reg) {m_value %= reg->GetValue();}
+            void shift_left_with_value(uint8_t imm) {m_value <<= imm;}
+            void shift_right_with_value(uint8_t imm) {m_value >>= imm;}
+
 
         };
-        class Accumulator : public Register {
+
+        class LinkRegister final : public Register {
+        public:
+            LinkRegister() : Register(vm, 0xFF) {};
+            ~LinkRegister() override = default;
+            bool IsInUse() const override {return true;}
 
         };
 

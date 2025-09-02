@@ -1,5 +1,6 @@
 #pragma once
 #include "ExecutionState.h"
+#include "Stack.h"
 #include "../Bytecode/BytecodeStream.h"
 #include "../Bytecode/Bytecodes.h"
 
@@ -9,10 +10,24 @@ namespace js {
 
         class VM {
             using Bytecode = uint8_t;
+            using RegisterSet = std::array<Register*, 256>;
         public:
             explicit VM(BytecodeStream* bytecodeStream): m_stream(bytecodeStream) {}
             ~VM() = default;
-            void Run();
+
+            void run();
+
+            void allocate_register_specific();
+            void allocate_register_random();
+            Register*& register_by_id (uint8_t id) {
+                return m_registers.at(id);
+            }
+
+            ExecutionState* save_state () {
+
+            }
+            void push_stack();
+            void pop_stack();
 
             void initialize();
             
@@ -34,7 +49,7 @@ namespace js {
             HANDLER_PROTOTYPE(LOAD_NAMED_PROPERTY, Object_Descriptor, Name&);
             HANDLER_PROTOTYPE(LOAD_KEYED_PROPERTY, Object_Descriptor, Register&);
             HANDLER_PROTOTYPE(LOAD_INDEXED_PROPERTY, Object_Descriptor, Slot);
-            HANDLER_PROTOTYPE(CREATE_OBJECT);
+            HANDLER_PROTOTYPE(CREATE_OBJECT, Name&);
             HANDLER_PROTOTYPE(CREATE_CONTEXT);
             HANDLER_PROTOTYPE(NOP);
             HANDLER_PROTOTYPE(RETURN);
@@ -43,13 +58,21 @@ namespace js {
             HANDLER_PROTOTYPE(OR, Register&);
             HANDLER_PROTOTYPE(NEGATE, Register&);
             HANDLER_PROTOTYPE(MODULO, Register&);
-            HANDLER_PROTOTYPE(SHIFT_LEFT, Register&, Value&);
-            HANDLER_PROTOTYPE(SHIFT_RIGHT, Register& , Value&);
+            HANDLER_PROTOTYPE(SHIFT_LEFT, Value&);
+            HANDLER_PROTOTYPE(SHIFT_RIGHT, Value&);
+            HANDLER_PROTOTYPE(CREATE_FUNCTION, Name&);
+            HANDLER_PROTOTYPE(CREATE_ARRAY, Name&);
+            HANDLER_PROTOTYPE(SAVE_STATE);
+            HANDLER_PROTOTYPE(RESTORE_STATE);
              
             
         private:
             BytecodeStream* m_stream;
-            ExecutionState* m_execState {new ExecutionState()};
+            RegisterSet m_registers {};
+            ExecutionState* m_execState {new ExecutionState(*this)};
+            Stack* m_stack {new Stack(*this)};
+            bool m_running {false};
+
         };
 
     };

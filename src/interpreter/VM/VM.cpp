@@ -25,7 +25,7 @@ namespace js{
             DECLARE_HANDLER(VM::LOAD_NAMED_PROPERTY, Object_Descriptor od, Name& name){}
             DECLARE_HANDLER(VM::LOAD_KEYED_PROPERTY, Object_Descriptor od, Register& reg){}
             DECLARE_HANDLER(VM::LOAD_INDEXED_PROPERTY, Object_Descriptor od, Slot slot){}
-            DECLARE_HANDLER(VM::CREATE_OBJECT){}
+            DECLARE_HANDLER(VM::CREATE_OBJECT, Name& name){}
             DECLARE_HANDLER(VM::CREATE_CONTEXT){}
             DECLARE_HANDLER(VM::NOP){}
             DECLARE_HANDLER(VM::RETURN){}
@@ -34,7 +34,11 @@ namespace js{
             DECLARE_HANDLER(VM::OR, Register& reg){}
             DECLARE_HANDLER(VM::NEGATE, Register& reg){}
             DECLARE_HANDLER(VM::MODULO, Register& reg){}
-            DECLARE_HANDLER(VM::SHIFT_LEFT, Register& reg, Value& imm){}
-            DECLARE_HANDLER(VM::SHIFT_RIGHT, Register& reg, Value& imm){};
+            DECLARE_HANDLER(VM::SHIFT_LEFT, Value& imm){}
+            DECLARE_HANDLER(VM::SHIFT_RIGHT, Value& imm){};
+            DECLARE_HANDLER(VM::CREATE_FUNCTION, Name& name){};
+            DECLARE_HANDLER(VM::CREATE_ARRAY, Name& name){};
+            DECLARE_HANDLER(VM::SAVE_STATE){};
+            DECLARE_HANDLER(VM::RESTORE_STATE){};
     }
 }

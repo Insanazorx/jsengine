@@ -1,6 +1,6 @@
 # ninja log v6
 20	1638	1746019365328810387	CMakeFiles/js.dir/src/frontend/AST.cpp.o	d0da69661a5d8eb9
-1	96	1756675761566394429	/Users/insanazor/CLionProjects/jsengine/cmake-build-debug/cmake_install.cmake	8c38e83319488d73
+1	96	1756837614625386577	/Users/insanazor/CLionProjects/jsengine/cmake-build-debug/cmake_install.cmake	8c38e83319488d73
 12	1120	1742396751401703077	CMakeFiles/js.dir/src/Lexer.cpp.o	cdc24db201af9e5d
 13	1875	1756672789679009142	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
 5	1267	1742396887313188842	CMakeFiles/js.dir/src/AST.cpp.o	1cdfbe4ef6e79d93
@@ -8,7 +8,14 @@
 5	910	1755777968882821356	CMakeFiles/js.dir/src/frontend/Lexer.cpp.o	8ac9c66d89c285d
 5	892	1755777968882949152	CMakeFiles/js.dir/src/SourceCode.cpp.o	2102b554a565738c
 20	699	1755637607373762061	CMakeFiles/js.dir/src/Validator.cpp.o	37adafce29db97e6
-1	96	1756675761567158654	build.ninja	8c38e83319488d73
+1	96	1756837614625924799	build.ninja	8c38e83319488d73
 2127	2263	1756586322481344996	js	542f96144b9232da
-14	598	1756672789679374513	CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o	ba04ba52c88117b0
+8	430	1756831022620513364	CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o	ba04ba52c88117b0
 13	862	1756586320367643859	CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o	d48593f524182f0
+7	464	1756838413369242521	CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o	ba04ba52c88117b0
+7	415	1756840128861329569	CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o	d48593f524182f0
+6	1372	1756840128861039939	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
+1372	1495	1756840130227158536	js	542f96144b9232da
+5	425	1756840651768996182	CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o	d48593f524182f0
+5	1372	1756840651768735261	CMakeFiles/js.dir/src/main.cpp.o	93ad67c964bc895c
+1372	1404	1756840653135750068	js	542f96144b9232da

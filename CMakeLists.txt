@@ -36,7 +36,11 @@ add_executable(js src/main.cpp
         src/interpreter/VM/VM.cpp
         src/interpreter/VM/ExecutionState.h
         src/interpreter/Bytecode/Bytecodes.h
-        src/interpreter/VM/Flag.h)
+        src/interpreter/VM/Flag.h
+        src/interpreter/RuntimeObjects/Environment.h
+        src/interpreter/RuntimeObjects/ThisBinding.h
+        src/interpreter/VM/Stack.h
+        src/interpreter/VM/VMObject.h)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)
