@@ -3,18 +3,17 @@
 
 namespace js {
     namespace Interpreter {
-
         class RuntimeObject {
         public:
             RuntimeObject() = default;
             virtual ~RuntimeObject() = default;
 
+
+            std::string& name() {
+                return m_name;
+            }
+        private:
+            std::string m_name {"Object"};
         };
-        std::string& name() const {
-            return m_name;
-        }
-
-        std::string m_name {"Object"};
-
-    } // namespace Interpreter
+    }; // namespace Interpreter
 }

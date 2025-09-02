@@ -4,8 +4,7 @@
 #include <string>
 
 #include "./ast/ASTNodeFactory.h"
-
-
+#include "interpreter/VM/VM.h"
 
 
 int main () {
@@ -16,7 +15,8 @@ int main () {
         std::cerr << "Error opening file: " << file_path << std::endl;
         return 1;
     }
-
+    //PORNO
+    std::cout << "porno";
     nlohmann::json json_data;
     try {
         ast_file >> json_data;
@@ -28,6 +28,18 @@ int main () {
 
     js::ASTNode* tl_node = js::AstNodeFactory::CreateFromJson(json_data);
     std::cout << tl_node->toJson().dump(4);
+
+
+
+    auto generator = js::Interpreter::BytecodeGenerator::Create();
+
+    auto node = js::BinaryOpNode::Create();
+
+    node->GenerateBytecode(*generator);
+
+    auto result = generator->ExtractBytecodeStream();
+
+
 
 
 
