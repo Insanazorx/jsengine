@@ -40,7 +40,12 @@ add_executable(js src/main.cpp
         src/interpreter/RuntimeObjects/Environment.h
         src/interpreter/RuntimeObjects/ThisBinding.h
         src/interpreter/VM/Stack.h
-        src/interpreter/VM/VMObject.h)
+        src/interpreter/VM/VMObject.h
+        src/interpreter/RuntimeObjects/BuiltinObjects/ConsoleObject.h
+        src/interpreter/RuntimeObjects/BuiltinFunctions/DebugPrint.h
+        src/interpreter/RuntimeObjects/JSFunction.h
+        src/interpreter/Bytecode/BasicBlock.h
+)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

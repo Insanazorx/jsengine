@@ -55,6 +55,10 @@ namespace js {
         return false;
     }
 
+    inline int absolute(int value) {
+        return value < 0 ? -value : value;
+    }
+
     inline std::vector<std::string> Split(const std::string& str, char delimiter) {
         // Geçici bir dizi oluştur
 
@@ -103,5 +107,34 @@ namespace js {
             }
         return -1;
     }
+
+
+    class packer {
+        static std::array<uint8_t,2> pack16(uint16_t value) {
+            std::array<uint8_t,2> bytes;
+            for (int i = 0; i < 2; ++i) {
+                bytes[i] = (value >> (i * 8)) & 0xFF;
+            }
+            return bytes;
+        }
+
+
+        static std::array<uint8_t,4> pack32(uint32_t value) {
+            std::array<uint8_t,4> bytes;
+            for (int i = 0; i < 4; ++i) {
+                bytes[i] = (value >> (i * 8)) & 0xFF;
+            }
+            return bytes;
+        }
+
+        static std::array<uint8_t,8> pack64(uint64_t value) {
+            std::array<uint8_t,8> bytes;
+            for (int i = 0; i < 8; ++i) {
+                bytes[i] = (value >> (i * 8)) & 0xFF;
+            }
+            return bytes;
+        }
+    };
+
 
 }

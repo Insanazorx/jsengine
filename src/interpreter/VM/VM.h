@@ -17,11 +17,19 @@ namespace js {
 
             void run();
 
-            void allocate_register_specific();
-            void allocate_register_random();
+            void make_register_exist(uint8_t id) {
+                if (id >= m_registers.size()) {
+                    std::cerr << "Invalid register ID: " << static_cast<int>(id) << std::endl;
+                    VERIFY_NOT_REACHED();
+                }
+                if (m_registers[id] == nullptr)
+                    m_registers[id] = Register::CreateWithSpecificId(*this, id);
+            }
+
             Register*& register_by_id (uint8_t id) {
                 return m_registers.at(id);
             }
+
 
             ExecutionState* save_state () {
 
@@ -32,46 +40,17 @@ namespace js {
             void initialize();
             
 
-            HANDLER_PROTOTYPE(LOAD_ACCUMULATOR_REG, Register&);
-            HANDLER_PROTOTYPE(LOAD_ACCUMULATOR_IMM, Value&);
-            HANDLER_PROTOTYPE(STORE_ACCUMULATOR, Register&);
-            HANDLER_PROTOTYPE(ADD, Register&);
-            HANDLER_PROTOTYPE(SUBTRACT, Register&);
-            HANDLER_PROTOTYPE(MULTIPLY, Register&);
-            HANDLER_PROTOTYPE(DIVIDE, Register&);
-            HANDLER_PROTOTYPE(JUMP, Address);
-            HANDLER_PROTOTYPE(COMPARE, Register&);
-            HANDLER_PROTOTYPE(TEST, Register&);
-            HANDLER_PROTOTYPE(JUMP_IF_EQUAL, Address);
-            HANDLER_PROTOTYPE(JUMP_IF_ZERO, Address);
-            HANDLER_PROTOTYPE(JUMP_UNLESS_ZERO, Address);
-            HANDLER_PROTOTYPE(CALL_FUNCTION, Name&);
-            HANDLER_PROTOTYPE(LOAD_NAMED_PROPERTY, Object_Descriptor, Name&);
-            HANDLER_PROTOTYPE(LOAD_KEYED_PROPERTY, Object_Descriptor, Register&);
-            HANDLER_PROTOTYPE(LOAD_INDEXED_PROPERTY, Object_Descriptor, Slot);
-            HANDLER_PROTOTYPE(CREATE_OBJECT, Name&);
-            HANDLER_PROTOTYPE(CREATE_CONTEXT);
-            HANDLER_PROTOTYPE(NOP);
-            HANDLER_PROTOTYPE(RETURN);
-            HANDLER_PROTOTYPE(XOR, Register&);
-            HANDLER_PROTOTYPE(AND, Register&);
-            HANDLER_PROTOTYPE(OR, Register&);
-            HANDLER_PROTOTYPE(NEGATE, Register&);
-            HANDLER_PROTOTYPE(MODULO, Register&);
-            HANDLER_PROTOTYPE(SHIFT_LEFT, Value&);
-            HANDLER_PROTOTYPE(SHIFT_RIGHT, Value&);
-            HANDLER_PROTOTYPE(CREATE_FUNCTION, Name&);
-            HANDLER_PROTOTYPE(CREATE_ARRAY, Name&);
-            HANDLER_PROTOTYPE(SAVE_STATE);
-            HANDLER_PROTOTYPE(RESTORE_STATE);
+            X_FOR_BYTECODES_WITH_TYPED_ARGS(HANDLER_PROTOTYPE)
              
             
         private:
             BytecodeStream* m_stream;
             RegisterSet m_registers {};
-            ExecutionState* m_execState {new ExecutionState(*this)};
+            ExecutionState* m_exec_state {new ExecutionState(*this)};
             Stack* m_stack {new Stack(*this)};
             bool m_running {false};
+            //TODO: runtime heap for objects, functions, arrays, etc.
+            //TODO: runtime objects
 
         };
 

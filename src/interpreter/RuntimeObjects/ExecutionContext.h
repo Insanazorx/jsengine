@@ -12,6 +12,12 @@ namespace js {
         public:
             ExecutionContext() = default;
             ~ExecutionContext() override = default;
+
+            void allocate_environment(Environment* env) {
+                m_outer_environment = m_current_environment;
+                m_current_environment = env;
+            }
+            Environment* current_environment() { return m_current_environment; }
         private:
             ThisBinding m_this_binding;
             Environment* m_current_environment {nullptr};

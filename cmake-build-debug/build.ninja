@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_js: phony || .
 build CMakeFiles/js.dir/src/main.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/main.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/main.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src
@@ -60,7 +60,7 @@ build CMakeFiles/js.dir/src/main.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/
 build CMakeFiles/js.dir/src/frontend/Lexer.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/frontend/Lexer.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/frontend/Lexer.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src/frontend
@@ -68,7 +68,7 @@ build CMakeFiles/js.dir/src/frontend/Lexer.cpp.o: CXX_COMPILER__js_unscanned_Deb
 build CMakeFiles/js.dir/src/Validator.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/Validator.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/Validator.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src
@@ -76,7 +76,7 @@ build CMakeFiles/js.dir/src/Validator.cpp.o: CXX_COMPILER__js_unscanned_Debug /U
 build CMakeFiles/js.dir/src/SourceCode.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/SourceCode.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/SourceCode.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src
@@ -84,7 +84,7 @@ build CMakeFiles/js.dir/src/SourceCode.cpp.o: CXX_COMPILER__js_unscanned_Debug /
 build CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/interpreter/Bytecode/BytecodeGenerator.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src/interpreter/Bytecode
@@ -92,7 +92,7 @@ build CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o: CXX_CO
 build CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/interpreter/VM/VM.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
   INCLUDES = -isystem /opt/homebrew/include
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src/interpreter/VM
@@ -105,10 +105,10 @@ build CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o: CXX_COMPILER__js_unscanned_
 #############################################
 # Link the executable js
 
-build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/frontend/Lexer.cpp.o CMakeFiles/js.dir/src/Validator.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd
+build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/frontend/Lexer.cpp.o CMakeFiles/js.dir/src/Validator.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd
   CONFIG = Debug
-  FLAGS = -w -g -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk
-  LINK_LIBRARIES = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/lib/libcurl.tbd
+  FLAGS = -w -g -g -arch arm64
+  LINK_LIBRARIES = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd
   OBJECT_DIR = CMakeFiles/js.dir
   POST_BUILD = :
   PRE_LINK = :

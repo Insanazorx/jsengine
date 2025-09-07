@@ -4,6 +4,7 @@
 #include <string>
 
 #include "./ast/ASTNodeFactory.h"
+#include "interpreter/RuntimeObjects/Value.h"
 #include "interpreter/VM/VM.h"
 
 
@@ -33,11 +34,26 @@ int main () {
 
     auto generator = js::Interpreter::BytecodeGenerator::Create();
 
-    auto node = js::BinaryOpNode::Create();
+#define BUILD_COMMAND(op, ...) generator->BuildCommand(js::Interpreter::Opcode::op __VA_OPT__(,) __VA_ARGS__)
 
-    node->GenerateBytecode(*generator);
+    BUILD_COMMAND(LOAD_ACCUMULATOR_IMM8, 10);
+    BUILD_COMMAND(STORE_ACCUMULATOR, 1);
+    BUILD_COMMAND(LOAD_ACCUMULATOR_IMM8, 20);
+    BUILD_COMMAND(ADD, 1);
+    BUILD_COMMAND(STORE_ACCUMULATOR, 2);
+    BUILD_COMMAND(DEBUG_PRINT, 2);
+    BUILD_COMMAND(HALT);
 
-    auto result = generator->ExtractBytecodeStream();
+
+    auto bytecode_stream = generator->ExtractBytecodeStream();
+
+    bytecode_stream->print();
+
+    auto vm = js::Interpreter::VM(bytecode_stream);
+    vm.run();
+
+
+
 
 
 

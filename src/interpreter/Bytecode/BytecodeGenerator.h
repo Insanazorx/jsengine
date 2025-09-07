@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BasicBlock.h"
 #include "Bytecodes.h"
 #include "BytecodeStream.h"
 
@@ -21,10 +22,6 @@ namespace js {
             using Name = std::string;
         public:
 
-
-            enum class OpCode : uint8_t {
-
-            };
         private:
             BytecodeGenerator() = default;
         public:
@@ -33,19 +30,27 @@ namespace js {
             }
 
             ~BytecodeGenerator() {
-                delete m_BytecodeStream;
+                delete m_stream;
             }
-
-
 
             BytecodeStream* ExtractBytecodeStream() const {
-                return m_BytecodeStream;
+                return m_stream;
             }
-            template <typename... Args> void BuildCommand(OpCode op, Args... args) {
-                BytecodeStream* stream = BytecodeStream::Create();
-                *stream << static_cast<BytecodeStream::Bytecode>(op);
-                std::initializer_list<int>{(*stream << static_cast<BytecodeStream::Bytecode>(args), 0)...};
+            template <typename... Args> void BuildCommand(Opcode op, Args... args) {
+                *m_stream << static_cast<uint8_t>(op);
+                std::initializer_list<int>{(*m_stream << static_cast<uint8_t>(args), 0)...};
             }
+
+            //TODO: Build Basic Blocks from ASTNode Objects
+            void build_basic_blocks();
+
+            //TODO: Convert BasicBlock relative jumps to absolute jumps
+            void convert_relative_jumps_to_absolute();
+
+            //TODO: Convert BasicBlock relative addresses to absolute addresses
+            void convert_relative_addresses_to_absolute();
+
+
 
         private:
             void emitBytecode (int opCode);
@@ -55,7 +60,8 @@ namespace js {
 
 
         private:
-            BytecodeStream* m_BytecodeStream {BytecodeStream::Create()};
+            BytecodeStream* m_stream {BytecodeStream::Create()};
+            std::vector<BasicBlock> m_blocks {};
 
         }; // class BytecodeGenerator
     };  // namespace Interpreter
