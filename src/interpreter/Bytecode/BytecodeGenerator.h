@@ -7,6 +7,8 @@
 
 namespace js {
     namespace Interpreter {
+        class VM;
+
         enum class GenerateBytecodeResult {
             SUCCESS = 0,
             FAILURE = 1,
@@ -37,9 +39,42 @@ namespace js {
                 return m_stream;
             }
             template <typename... Args> void BuildCommand(Opcode op, Args... args) {
-                *m_stream << static_cast<uint8_t>(op);
-                std::initializer_list<int>{(*m_stream << static_cast<uint8_t>(args), 0)...};
+
+                auto streamer = [this](auto arg) {
+
+                    using T = decltype(arg);
+
+                    if constexpr (std::is_same_v<T, uint64_t>) {
+                        for (int i = 0; i < 8; ++i) {
+                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
+                            arg >>= 8;
+                        }
+                    }
+                    else if constexpr (std::is_same_v<T, uint32_t>) {
+                        for (int i = 0; i < 4; ++i) {
+                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
+                            arg >>= 8;
+                        }
+                    }
+                    else if constexpr (std::is_same_v<T, uint16_t>) {
+                        for (int i = 0; i < 2; ++i) {
+                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
+                            arg >>= 8;
+                        }
+                    }
+                    else if constexpr (std::is_same_v<T, uint8_t>) {
+                        *m_stream << static_cast<Bytecode>(arg);
+                    }
+
+
+                };
+
+                *m_stream << op;
+
+                std::initializer_list<int>{(streamer(args), 0)...};
             }
+
+            void allocate_register(VM& vm);
 
             //TODO: Build Basic Blocks from ASTNode Objects
             void build_basic_blocks();

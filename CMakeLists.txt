@@ -16,8 +16,6 @@ add_executable(js src/main.cpp
         src/frontend/EnumTypes.h
         src/Util.h
         src/Visitor.h
-        src/Validator.h
-        src/Validator.cpp
         src/SourceCode.h
         src/SourceCode.cpp
         src/frontend/ErrorOr.h
@@ -45,6 +43,10 @@ add_executable(js src/main.cpp
         src/interpreter/RuntimeObjects/BuiltinFunctions/DebugPrint.h
         src/interpreter/RuntimeObjects/JSFunction.h
         src/interpreter/Bytecode/BasicBlock.h
+        src/ast/ASTJsonDump.cpp
+        src/interpreter/Bytecode/ASTBytecodeGeneration.cpp
+        src/interpreter/Bytecode/Instruction.h
+        src/interpreter/Bytecode/BasicBlock.cpp
 )
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)

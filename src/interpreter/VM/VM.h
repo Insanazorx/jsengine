@@ -22,8 +22,11 @@ namespace js {
                     std::cerr << "Invalid register ID: " << static_cast<int>(id) << std::endl;
                     VERIFY_NOT_REACHED();
                 }
-                if (m_registers[id] == nullptr)
+                if (m_registers[id] == nullptr) {
+                    //DEBUG("Register was not found, creating new one with id: " << static_cast<int>(id));
                     m_registers[id] = Register::CreateWithSpecificId(*this, id);
+                }
+
             }
 
             Register*& register_by_id (uint8_t id) {

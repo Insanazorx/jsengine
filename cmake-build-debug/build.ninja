@@ -65,14 +65,6 @@ build CMakeFiles/js.dir/src/frontend/Lexer.cpp.o: CXX_COMPILER__js_unscanned_Deb
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src/frontend
 
-build CMakeFiles/js.dir/src/Validator.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/Validator.cpp || cmake_object_order_depends_target_js
-  CONFIG = Debug
-  DEP_FILE = CMakeFiles/js.dir/src/Validator.cpp.o.d
-  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
-  INCLUDES = -isystem /opt/homebrew/include
-  OBJECT_DIR = CMakeFiles/js.dir
-  OBJECT_FILE_DIR = CMakeFiles/js.dir/src
-
 build CMakeFiles/js.dir/src/SourceCode.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/SourceCode.cpp || cmake_object_order_depends_target_js
   CONFIG = Debug
   DEP_FILE = CMakeFiles/js.dir/src/SourceCode.cpp.o.d
@@ -97,6 +89,30 @@ build CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o: CXX_COMPILER__js_unscanned_
   OBJECT_DIR = CMakeFiles/js.dir
   OBJECT_FILE_DIR = CMakeFiles/js.dir/src/interpreter/VM
 
+build CMakeFiles/js.dir/src/ast/ASTJsonDump.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/ast/ASTJsonDump.cpp || cmake_object_order_depends_target_js
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles/js.dir/src/ast/ASTJsonDump.cpp.o.d
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/js.dir
+  OBJECT_FILE_DIR = CMakeFiles/js.dir/src/ast
+
+build CMakeFiles/js.dir/src/interpreter/Bytecode/ASTBytecodeGeneration.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/interpreter/Bytecode/ASTBytecodeGeneration.cpp || cmake_object_order_depends_target_js
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles/js.dir/src/interpreter/Bytecode/ASTBytecodeGeneration.cpp.o.d
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/js.dir
+  OBJECT_FILE_DIR = CMakeFiles/js.dir/src/interpreter/Bytecode
+
+build CMakeFiles/js.dir/src/interpreter/Bytecode/BasicBlock.cpp.o: CXX_COMPILER__js_unscanned_Debug /Users/insanazor/CLionProjects/jsengine/src/interpreter/Bytecode/BasicBlock.cpp || cmake_object_order_depends_target_js
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles/js.dir/src/interpreter/Bytecode/BasicBlock.cpp.o.d
+  FLAGS = -w -g -g -std=gnu++20 -arch arm64 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/js.dir
+  OBJECT_FILE_DIR = CMakeFiles/js.dir/src/interpreter/Bytecode
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target js
@@ -105,7 +121,7 @@ build CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o: CXX_COMPILER__js_unscanned_
 #############################################
 # Link the executable js
 
-build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/frontend/Lexer.cpp.o CMakeFiles/js.dir/src/Validator.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd
+build js: CXX_EXECUTABLE_LINKER__js_Debug CMakeFiles/js.dir/src/main.cpp.o CMakeFiles/js.dir/src/frontend/Lexer.cpp.o CMakeFiles/js.dir/src/SourceCode.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/BytecodeGenerator.cpp.o CMakeFiles/js.dir/src/interpreter/VM/VM.cpp.o CMakeFiles/js.dir/src/ast/ASTJsonDump.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/ASTBytecodeGeneration.cpp.o CMakeFiles/js.dir/src/interpreter/Bytecode/BasicBlock.cpp.o | /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd
   CONFIG = Debug
   FLAGS = -w -g -g -arch arm64
   LINK_LIBRARIES = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd

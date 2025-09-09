@@ -110,6 +110,7 @@ namespace js {
 
 
     class packer {
+    public:
         static std::array<uint8_t,2> pack16(uint16_t value) {
             std::array<uint8_t,2> bytes;
             for (int i = 0; i < 2; ++i) {
@@ -127,8 +128,8 @@ namespace js {
             return bytes;
         }
 
-        static std::array<uint8_t,8> pack64(uint64_t value) {
-            std::array<uint8_t,8> bytes;
+        static uint8_t* pack64(uint64_t value) {
+            uint8_t* bytes;
             for (int i = 0; i < 8; ++i) {
                 bytes[i] = (value >> (i * 8)) & 0xFF;
             }

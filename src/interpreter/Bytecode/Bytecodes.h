@@ -36,12 +36,12 @@ namespace js {
     X(SUBTRACT, 0x08, 2,ARG_TYPE::REGISTER)                                                                     \
     X(MULTIPLY, 0x09, 2,ARG_TYPE::REGISTER)                                                                     \
     X(DIVIDE, 0x0A, 2,ARG_TYPE::REGISTER)                                                                       \
-    X(JUMP, 0x0B, 2,ARG_TYPE::IMMEDIATE)                                                                        \
+    X(JUMP, 0x0B, 2,ARG_TYPE::REGISTER)                                                                         \
     X(COMPARE, 0x0C, 2,ARG_TYPE::REGISTER)                                                                      \
     X(TEST, 0x0D, 2,ARG_TYPE::REGISTER)                                                                         \
-    X(JUMP_IF_EQUAL,0x0E, 5,ARG_TYPE::REGISTER)                                                                 \
-    X(JUMP_IF_ZERO, 0x0F, 5,ARG_TYPE::REGISTER)                                                                 \
-    X(JUMP_UNLESS_ZERO,0x10, 5,ARG_TYPE::REGISTER)                                                              \
+    X(JUMP_IF_EQUAL,0x0E, 2,ARG_TYPE::REGISTER)                                                                 \
+    X(JUMP_IF_ZERO, 0x0F, 2,ARG_TYPE::REGISTER)                                                                 \
+    X(JUMP_UNLESS_ZERO,0x10, 2, ARG_TYPE::REGISTER)                                                              \
     X(CALL_FUNCTION, 0x11, 3,ARG_TYPE::NAME_INDEX)                                                              \
     X(LOAD_NAMED_PROPERTY, 0x12, 5, ARG_TYPE::OBJECT_DESCRIPTOR, ARG_TYPE::NAME_INDEX)                          \
     X(LOAD_KEYED_PROPERTY, 0x13, 4,ARG_TYPE::OBJECT_DESCRIPTOR, ARG_TYPE::REGISTER)                             \
@@ -79,9 +79,9 @@ namespace js {
     X(JUMP, 0x0B, 2, Reg)                                                                                       \
     X(COMPARE, 0x0C, 2, Reg)                                                                                    \
     X(TEST, 0x0D, 2, Reg)                                                                                       \
-    X(JUMP_IF_EQUAL,0x0E, 5, Reg)                                                                               \
-    X(JUMP_IF_ZERO, 0x0F, 5, Reg)                                                                               \
-    X(JUMP_UNLESS_ZERO,0x10, 5, Reg)                                                                            \
+    X(JUMP_IF_EQUAL,0x0E, 2, Reg)                                                                               \
+    X(JUMP_IF_ZERO, 0x0F, 2, Reg)                                                                               \
+    X(JUMP_UNLESS_ZERO,0x10, 2, Reg)                                                                            \
     X(CALL_FUNCTION, 0x11, 3, Name_Index)                                                                       \
     X(LOAD_NAMED_PROPERTY, 0x12, 5, Object_Descriptor, Name_Index)                                              \
     X(LOAD_KEYED_PROPERTY, 0x13, 4, Object_Descriptor, Reg)                                                     \
@@ -97,7 +97,7 @@ namespace js {
     X(MODULO, 0x1D, 2,Reg)                                                                                      \
     X(SHIFT_LEFT, 0x1E, 2,Reg)                                                                                  \
     X(SHIFT_RIGHT, 0x1F, 2,Reg)                                                                                 \
-    X(CREATE_FUNCTION, 0x20, 3, Name_Index)                                                                             \
+    X(CREATE_FUNCTION, 0x20, 3, Name_Index)                                                                     \
     X(CREATE_ARRAY, 0x21, 3, Name_Index)                                                                        \
     X(SAVE_STATE, 0x22, 1)                                                                                      \
     X(RESTORE_STATE, 0x23, 1)                                                                                   \

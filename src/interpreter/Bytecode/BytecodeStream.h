@@ -35,6 +35,7 @@ namespace js {
                 return *this;
             }
 
+
             void print() {
                 std::vector<std::vector<Bytecode>> whole_printing_buffer;
                 std::vector<Bytecode> printing_buffer;
@@ -59,7 +60,6 @@ namespace js {
                     i += arg_length;
                 }
 
-
                 for (auto line : whole_printing_buffer) {
                     auto it = opcode_to_string_list.find(static_cast<uint8_t>(line[0]));
 
@@ -75,6 +75,8 @@ namespace js {
                 }
 
             }
+
+
 
 
 

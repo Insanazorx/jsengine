@@ -1,7 +1,8 @@
+#pragma once
 #include "AST.h"
 
 
-namespace js {
+namespace js::AST {
     class AstNodeFactory {
     public:
 
@@ -23,19 +24,19 @@ namespace js {
             }
 
             if (type == "Identifier") {
-                auto node = VariableNode::Create();
+                auto node = Identifier::Create();
                 node->SetValue(ast_json["name"]);
                 return node;
             }
             if (type == "Literal") {
-                auto node = ValueNode::Create();
+                auto node = Identifier::Create();
 
                 node->SetValue(ast_json["raw"]);
 
                 return node;
             }
             if (type == "BinaryExpression") {
-                auto node = BinaryOpNode::Create();
+                auto node = BinaryOperation::Create();
                 node->SetValue(ast_json["operator"]);
                 node->SetLhs(CreateFromJson(ast_json["left"]));
                 node->SetRhs(CreateFromJson(ast_json["right"]));
@@ -58,7 +59,7 @@ namespace js {
             }
 
             if (type == "VariableDeclaration") {
-                auto node = VariableDeclarationNode::Create();
+                auto node = VariableDeclaration::Create();
                 auto kind_string = ast_json["kind"];
                 if (kind_string == "let") {
                     node->SetKind(DeclarationKind::LET);
@@ -68,7 +69,7 @@ namespace js {
                     node->SetKind(DeclarationKind::VAR);
                 }
                 for (const auto& decl : ast_json["declarations"]) {
-                    auto var_decl = VariableNode::Create();
+                    auto var_decl = Identifier::Create();
                     var_decl->SetValue(decl["id"]["name"]);
 
                     node->SetVariable(var_decl);
@@ -79,7 +80,7 @@ namespace js {
             }
 
             if (type == "AssignmentExpression") {
-                auto node = AssignmentNode::Create();
+                auto node = AssignmentExpression::Create();
                 node->SetValue(ast_json["operator"]);
                 node->SetLvalue(CreateFromJson(ast_json["left"]));
                 node->SetRvalue(CreateFromJson(ast_json["right"]));
@@ -88,7 +89,7 @@ namespace js {
 
 
             if (type == "IfStatement") {
-                auto node = IfNode::Create();
+                auto node = IfStatement::Create();
                 node->SetTestNode(CreateFromJson(ast_json["test"]));
                 node->SetConsequentNode(CreateFromJson(ast_json["consequent"]));
                 if (!ast_json["alternate"].is_null()) {
@@ -99,14 +100,14 @@ namespace js {
             }
 
             if (type == "WhileStatement") {
-                auto node = WhileNode::Create();
+                auto node = WhileStatement::Create();
                 node->SetTestNode(CreateFromJson(ast_json["test"]));
                 node->SetConsequentNode(CreateFromJson(ast_json["body"]));
                 return node;
             }
 
             if (type == "ForStatement") {
-                auto node = ForNode::Create();
+                auto node = ForStatement::Create();
                 node->SetInitExpr(CreateFromJson(ast_json["init"]));
                 node->SetTestExpr(CreateFromJson(ast_json["test"]));
                 node->SetUpdateExpr(CreateFromJson(ast_json["update"]));
@@ -115,14 +116,14 @@ namespace js {
             }
 
             if (type == "BreakStatement") {
-                auto node = BreakNode::Create();
+                auto node = BreakStatement::Create();
                 return node;
             }
 
             if (type == "FunctionDeclaration") {
                 auto node = FunctionDeclaration::Create();
                 for (const auto& arg : ast_json["params"]) {
-                    auto arg_node = VariableNode::Create();
+                    auto arg_node = Identifier::Create();
                     arg_node->SetValue(arg["name"]);
                     node->AddArgument(arg_node);
                 }
@@ -150,7 +151,7 @@ namespace js {
             }
 
             if (type == "ReturnStatement") {
-                auto node = ReturnNode::Create();
+                auto node = ReturnStatement::Create();
                 if (!ast_json["argument"].is_null()) {
                     node->SetConsequentNode(CreateFromJson(ast_json["argument"]));
                 }
@@ -189,4 +190,5 @@ namespace js {
             throw std::runtime_error("Bilinmeyen operator: " + op);
         }
     };
+
 }
