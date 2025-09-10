@@ -50,6 +50,8 @@ int main () {
     BUILD_COMMAND(HALT);
 
     auto mul_inst = js::Interpreter::MULTIPLY_INST::Create(p8(13));
+    auto bb = js::Interpreter::BasicBlock::Create();
+    bb->add_instruction(*mul_inst);
 
     mul_inst->print();
 

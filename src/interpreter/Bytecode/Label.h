@@ -5,7 +5,7 @@
 namespace js {
     namespace Interpreter {
 
-        class Label : Instruction<> {
+        class Label : public Instruction {
         private:
             explicit Label(std::string& name) : m_name(name) {next_id = 0;}
         public:

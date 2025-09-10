@@ -13,7 +13,6 @@ namespace js {
         using Bytecode = uint8_t;
 
         class BytecodeStream {
-            friend class BytecodeGenerator;
 
         private:
             BytecodeStream() = default;

@@ -7,7 +7,7 @@
 namespace js {
     namespace Interpreter {
         using Bytecode = uint8_t;
-
+        #define VARIADIC uint8_t, uint16_t, uint32_t, uint64_t
         class BasicBlock {
         private:
             BasicBlock() = default;
@@ -21,8 +21,7 @@ namespace js {
             void make_true_branch(BasicBlock* true_branch) {m_true_branch = true_branch;}
             void make_false_branch(BasicBlock* false_branch) {m_false_branch = false_branch;}
 
-            template <typename... Ts>
-            void add_instruction(Instruction<Ts...>& insn) {m_bytecodes.push_back(insn);}
+            void add_instruction(const Instruction& insn) {m_insn.push_back(insn);}
             void set_start_address(int address) {m_start_address_absolute = address;}
             void set_label(Label* label) {m_label = label;}
 
@@ -36,7 +35,7 @@ namespace js {
         private:
             Label* m_label {};
 
-            std::vector<Instruction<>> m_insn {};
+            std::vector<Instruction> m_insn {};
             std::vector<Bytecode> m_bytecodes {};
 
             BasicBlock* m_true_branch {nullptr};

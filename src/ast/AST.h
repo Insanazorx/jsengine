@@ -21,7 +21,7 @@ class ParserContext;
 class Parser;
     class Node;
 #define BYTECODE_GENERATOR_HOOK \
-    Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator&) override;
+        Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator&) override;
 
 #define DECLARE_BYTECODE_GENERATOR_UNIT(name) \
     Interpreter::GenerateBytecodeResult name::GenerateBytecode(Interpreter::BytecodeGenerator& generator)
@@ -69,7 +69,6 @@ class Parser;
         bool hasParent() {return !!m_Parent;}
         ASTNode* Parent() {return m_Parent;}
         void AddParent(ASTNode* parent) {m_Parent = parent;}
-
 
         virtual Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator&);
 

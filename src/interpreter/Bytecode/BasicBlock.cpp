@@ -2,7 +2,8 @@
 
 namespace js {
     namespace Interpreter {
-        void BasicBlock::parse_instructions() {
+        template <typename... Ts>
+        void BasicBlock<Ts...>::parse_instructions() {
                 for (auto& inst : m_insn) {
                     for (const auto& arg : inst.args()) {
                         std::visit([=](auto&& value) {

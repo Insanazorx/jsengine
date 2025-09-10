@@ -16,14 +16,11 @@ namespace js {
         };
 
 
-
         class BytecodeGenerator {
             using Slot = uint8_t;
             using Address = uint32_t;
             using Object_Descriptor = uint16_t;
             using Name = std::string;
-        public:
-
         private:
             BytecodeGenerator() = default;
         public:
@@ -96,8 +93,6 @@ namespace js {
 
         private:
             BytecodeStream* m_stream {BytecodeStream::Create()};
-            std::vector<BasicBlock> m_blocks {};
-
         }; // class BytecodeGenerator
     };  // namespace Interpreter
 }; // namespace js
