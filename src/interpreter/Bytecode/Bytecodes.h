@@ -114,7 +114,6 @@ namespace js {
 #define HANDLER_PROTOTYPE(name, code, length, ...) inline __attribute__((always_inline)) void name##_HANDLER (__VA_ARGS__);
 #define INVOKE_HANDLER(name, ...) name##_HANDLER (__VA_ARGS__);
 
-
         enum Opcode : uint8_t {
             X_FOR_BYTECODES_WITH_ENUM_ARGS(ENUMERATE_BYTECODES)
         };

@@ -7,10 +7,10 @@ namespace js {
 
         class Label : public Instruction {
         private:
-            explicit Label(std::string& name) : m_name(name) {next_id = 0;}
+            explicit Label(std::string&& name) : m_name(std::move(name)) {next_id = 0;}
         public:
-            static Label* Create(std::string& name) {
-                return new Label(name);
+            static Label* Create(std::string&& name) {
+                return new Label(std::move(name));
             }
             ~Label() = default;
 
@@ -21,7 +21,7 @@ namespace js {
         private:
             static int next_id;
             int m_id {0};
-            std::string& m_name;
+            const std::string& m_name;
         };//class Label
 
     } // namespace Interpreter

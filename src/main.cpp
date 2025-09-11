@@ -49,14 +49,9 @@ int main () {
     BUILD_COMMAND(DEBUG_PRINT, p8(2));
     BUILD_COMMAND(HALT);
 
-    auto mul_inst = js::Interpreter::MULTIPLY_INST::Create(p8(13));
-    auto bb = js::Interpreter::BasicBlock::Create();
-    bb->add_instruction(*mul_inst);
-
-    mul_inst->print();
+    auto insn = js::Interpreter::LOAD_KEYED_PROPERTY_INSTRUCTION::Create(p16(1), p8(2));
 
     DEBUG("porno");
-
     auto bytecode_stream = generator->ExtractBytecodeStream();
 
     bytecode_stream->print();

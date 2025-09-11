@@ -7,57 +7,61 @@
 namespace js {
     namespace Interpreter {
 
+#define p64(x) static_cast<uint64_t>(x)
+#define p32(x) static_cast<uint32_t>(x)
+#define p16(x) static_cast<uint16_t>(x)
+#define p8(x) static_cast<uint8_t>(x)
 
 
         class Instruction {
         public:
-            using Operand = std::variant<uint8_t, uint16_t, uint32_t, uint64_t>;
-
+            Instruction() = default;
             virtual ~Instruction() = default;
             virtual Opcode opcode() const {return Opcode::NOP;}
             virtual int len() const {return -1;}
 
-
-            void print() const {
-                std::cout << "Opcode: " << static_cast<int>(opcode()) << " Args: ";
-                for (const auto& arg : m_args) {
-                    std::visit([](auto&& value) { std::cout << +value << " "; }, arg);
-                }
-                std::cout << "\n";
+            template <typename Ptr>
+            static inline typename std::remove_pointer<Ptr>::type::TupleType& GET_OPERANDS(Ptr insn) {
+                using T = typename std::remove_pointer<Ptr>::type;
+                return static_cast<T*>(insn)->get_operands();
             }
-            virtual const std::vector<Operand>& args() const { return m_args; }
 
+            virtual void print() const {};
         protected:
-            std::vector<Operand> m_args;
+
             uint32_t m_address {0};
         };
 
-        template <typename... Ts>
-        class InstructionDeriver: public Instruction {
-        public:
-            explicit InstructionDeriver(Ts... args) {
-                (m_args.emplace_back(std::forward<Ts>(args)), ...);
-            }
-        };
+#define INSTRUCTION_CLASS(name, code, length, ...)                                          \
+    class name##_INSTRUCTION : public Instruction {                     \
+    private:                                                                                \
+        template <typename... Args>                                                         \
+        name##_INSTRUCTION(Args... args) : m_operands (std::make_tuple(args...)) {}                   \
+    public:                                                                                 \
+        using TupleType = std::tuple<__VA_ARGS__>;                                \
+        template <typename... Args>                                                             \
+        static name##_INSTRUCTION* Create(Args... args) {                                       \
+        return new name##_INSTRUCTION(args...);                                             \
+    }                                                                                       \
+        ~name##_INSTRUCTION() override = default;                                               \
+        void print() const override{\
+            std::cout << "Instruction: " << #name << " Operands: ";\
+            std::apply([](auto&&... args) { ((std::cout << args << " "), ...); }, m_operands);\
+            std::cout << std::endl;\
+        }                          \
+        Opcode opcode() const override {return Opcode::name;}                                   \
+        int len() const override {return length;}                                               \
+        auto& get_operands() {return m_operands;}                                   \
+    private:                                                                                \
+        TupleType m_operands;                                                           \
+    };
 
 
-#define INSTRUCTION_CLASS(name, code, length, ...)                                  \
-    class name##_INST : public InstructionDeriver<__VA_ARGS__> {                           \
-    private:                                                                        \
-        template <typename... Args>                                                     \
-        name##_INST(Args... args) : InstructionDeriver(args...) {}                             \
-    public:                                                                         \
-    template <typename... Args>                                                     \
-    static name##_INST* Create(Args... args) {                                      \
-        return new name##_INST(args...);                                                \
-    }                                                                               \
-    ~name##_INST() override = default;                                              \
-                                                                                \
-    Opcode opcode() const override {return Opcode::name;}                       \
-    int len() const override {return length;}                                   \
-                                                                        \
-};
+
         X_FOR_BYTECODES_WITH_TYPED_ARGS(INSTRUCTION_CLASS)
+
+
+
 
     }
 }
