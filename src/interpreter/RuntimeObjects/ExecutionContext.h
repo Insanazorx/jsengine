@@ -1,42 +1,32 @@
 #pragma once
 
 
+#include "Environment.h"
 #include "RuntimeObject.h"
+#include "ThisBinding.h"
 #include "Value.h"
 
 namespace js {
     namespace Interpreter {
-
         class ExecutionContext : public RuntimeObject{
-        private:
-            ExecutionContext() = default;
-
         public:
-
-            static ExecutionContext* Create() {
-                return new ExecutionContext();
-            }
-
+            ExecutionContext() = default;
             ~ExecutionContext() override = default;
 
-
-
-        };//class ExecutionContext
-
-        class Environment : public RuntimeObject {
-        private:
-            Environment() = default;
-        public:
-            static Environment* Create() {
-                return new Environment();
+            void allocate_environment(Environment* env) {
+                m_outer_environment = m_current_environment;
+                m_current_environment = env;
             }
-            ~Environment() override = default;
-
-
+            Environment* current_environment() { return m_current_environment; }
         private:
-            std::vector<Value*> m_variables;
+            ThisBinding m_this_binding;
+            Environment* m_current_environment {nullptr};
+            Environment* m_outer_environment {nullptr};
+            bool m_strict_mode {false};
 
-        };
 
+
+            
+        };//class ExecutionContext
     }// namespace Interpreter
 }// namespace js

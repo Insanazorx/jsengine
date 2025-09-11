@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/src/interpreter/Bytecode/ASTBytecodeGeneration.h">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/interpreter/Bytecode/ASTBytecodeGeneration.h" />
+              <option name="originalContent" value="#pragma once&#10;#include &quot;../../ast/AST.h&quot;&#10;#include &quot;BytecodeGenerator.h&quot;&#10;&#10;namespace js {&#10;    namespace AST {&#10;        &#10;        DECLARE_BYTECODE_GENERATOR_UNIT(ProgramNode);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(BlockNode);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(ValueNode);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(NumericNode);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(AssignmentExpression);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(VariableDeclaration);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(BinaryOperation);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(BreakStatement);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(IfStatement);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(ForStatement);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(WhileStatement);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(ReturnStatement);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(FunctionDeclaration);&#10;        DECLARE_BYTECODE_GENERATOR_UNIT(CallExpression);&#10;    }&#10;}" />
+              <option name="updatedContent" value="#pragma once&#10;#include &quot;../../ast/AST.h&quot;&#10;#include &quot;BytecodeGenerator.h&quot;&#10;&#10;namespace js {&#10;    namespace AST {&#10;    }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

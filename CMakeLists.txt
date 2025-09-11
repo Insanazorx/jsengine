@@ -9,7 +9,6 @@ find_package(CURL REQUIRED)
 
 add_executable(js src/main.cpp
         src/ast/AST.h
-        src/ast/AST.cpp
         src/frontend/Lexer.h
         src/frontend/Lexer.cpp
         src/frontend/LexerTypes.h
@@ -17,21 +16,38 @@ add_executable(js src/main.cpp
         src/frontend/EnumTypes.h
         src/Util.h
         src/Visitor.h
-        src/Validator.h
-        src/Validator.cpp
         src/SourceCode.h
         src/SourceCode.cpp
         src/frontend/ErrorOr.h
         src/frontend/Forward.h
         src/ast/ASTNodeFactory.h
         src/interpreter/Bytecode/BytecodeGenerator.h
-        src/interpreter/InterpreterVM.h
+        src/interpreter/VM/VM.h
         src/interpreter/RuntimeObjects/ExecutionContext.h
         src/interpreter/RuntimeObjects/RuntimeObject.h
         src/interpreter/RuntimeObjects/Value.h
         src/interpreter/RuntimeObjects/JSObject.h
         src/interpreter/Bytecode/BytecodeStream.h
-        src/interpreter/Bytecode/Label.h)
+        src/interpreter/Bytecode/Label.h
+        src/interpreter/Bytecode/BytecodeGenerator.cpp
+        src/interpreter/VM/Register.h
+        src/interpreter/VM/VM.cpp
+        src/interpreter/VM/ExecutionState.h
+        src/interpreter/Bytecode/Bytecodes.h
+        src/interpreter/VM/Flag.h
+        src/interpreter/RuntimeObjects/Environment.h
+        src/interpreter/RuntimeObjects/ThisBinding.h
+        src/interpreter/VM/Stack.h
+        src/interpreter/VM/VMObject.h
+        src/interpreter/RuntimeObjects/BuiltinObjects/ConsoleObject.h
+        src/interpreter/RuntimeObjects/BuiltinFunctions/DebugPrint.h
+        src/interpreter/RuntimeObjects/JSFunction.h
+        src/interpreter/Bytecode/BasicBlock.h
+        src/ast/ASTJsonDump.cpp
+        src/interpreter/Bytecode/ASTBytecodeGeneration.cpp
+        src/interpreter/Bytecode/Instruction.h
+        src/interpreter/Bytecode/BasicBlock.cpp
+)
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(js PRIVATE CURL::libcurl)

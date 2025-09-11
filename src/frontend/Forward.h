@@ -21,15 +21,15 @@ namespace js {
     class SingleTokenStatement;
 
     class ASTNode;
-    class IfNode;
-    class ForNode;
-    class WhileNode;
-    class ReturnNode;
+    class IfStatement;
+    class ForStatement;
+    class WhileStatement;
+    class ReturnStatement;
     class FunctionNode;
-    class BinaryOpNode;
-    class UnaryOpNode;
-    class AssignmentNode;
-    class VariableDeclarationNode;
+    class BinaryOperation;
+    class UnaryOperation;
+    class AssignmentExpression;
+    class VariableDeclaration;
     class BlockNode;
 
     class Parser;

@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
-
-#include "JSObject.h"
+#include "RuntimeObject.h"
 
 namespace js {
     namespace Interpreter {
@@ -12,7 +11,9 @@ namespace js {
             Boolean,
             Number,
             String,
-            Object
+            Object,
+            Function,
+            Array
         };
 
         class Value : public RuntimeObject {
@@ -26,6 +27,8 @@ namespace js {
             virtual bool IsNumber() const { return false; }
             virtual bool IsString() const { return false; }
             virtual bool IsObject() const { return false; }
+            virtual bool IsFunction() const { return false; }
+            virtual bool IsArray() const { return false; }
 
         private:
             Type m_type {Type::Undefined};

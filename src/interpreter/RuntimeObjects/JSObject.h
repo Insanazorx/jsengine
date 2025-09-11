@@ -9,14 +9,15 @@ namespace js {
             JSObject() = default;
             virtual ~JSObject() = default;
 
-            virtual bool IsJSObject() const { return true; }
+            virtual bool IsJSObject() const { return false; }
             virtual std::string ToString() const { return "[object Object]"; }
 
             // Additional methods for JSObject can be defined here
             virtual void SetProperty(const std::string& name, const Value& value) {}
-            virtual Value& GetProperty(const std::string& name) const { }
+            virtual Value& GetProperty(const std::string& name) const { return {};}
             virtual bool HasProperty(const std::string& name) const { return false; }
-
+        private:
+            JSObject* m_prototype {nullptr};
         }; // class JSObject
 
     } // namespace Interpreter
