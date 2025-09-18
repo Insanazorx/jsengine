@@ -1,27 +1,31 @@
 #pragma once
 #include <string>
-
+#include "Instruction.h"
 
 namespace js {
     namespace Interpreter {
 
         class Label : public Instruction {
         private:
-            explicit Label(std::string&& name) : m_name(std::move(name)) {next_id = 0;}
+            explicit Label(std::string& name) : m_name(name) {}
         public:
             static Label* Create(std::string&& name) {
-                return new Label(std::move(name));
+                return new Label(name);
             }
             ~Label() = default;
 
+            std::string& name() const { return m_name; }
 
             int GetId() const { return m_id; }
-            void SetId() {m_id = next_id++;}
+            int start_address() const { return m_start_address; }
+            void set_start_address(int address) { m_start_address = address; }
+
 
         private:
-            static int next_id;
+
+            int m_start_address {0};
             int m_id {0};
-            const std::string& m_name;
+            std::string& m_name;
         };//class Label
 
     } // namespace Interpreter

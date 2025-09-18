@@ -13,13 +13,6 @@ namespace js::AST {
     class Validator;
     class ASTVisitor;
 
-    class StatementConverter;
-class NodeBranchInfo;
-class ASTBuilder;
-class ASTNode;
-class ParserContext;
-class Parser;
-    class Node;
 #define BYTECODE_GENERATOR_HOOK \
         Interpreter::GenerateBytecodeResult GenerateBytecode(Interpreter::BytecodeGenerator&) override;
 

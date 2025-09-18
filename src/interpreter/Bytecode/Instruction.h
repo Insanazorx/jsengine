@@ -7,61 +7,80 @@
 namespace js {
     namespace Interpreter {
 
-#define p64(x) static_cast<uint64_t>(x)
-#define p32(x) static_cast<uint32_t>(x)
-#define p16(x) static_cast<uint16_t>(x)
-#define p8(x) static_cast<uint8_t>(x)
 
 
         class Instruction {
         public:
-            Instruction() = default;
+            using Operand = std::variant<uint8_t, uint16_t, uint32_t, uint64_t>;
+
             virtual ~Instruction() = default;
             virtual Opcode opcode() const {return Opcode::NOP;}
             virtual int len() const {return -1;}
 
-            template <typename Ptr>
-            static inline typename std::remove_pointer<Ptr>::type::TupleType& GET_OPERANDS(Ptr insn) {
-                using T = typename std::remove_pointer<Ptr>::type;
-                return static_cast<T*>(insn)->get_operands();
-            }
 
-            virtual void print() const {};
+            virtual void print() const {}
+            virtual const std::vector<Operand>& args() const { return m_args; }
+
+
         protected:
 
+            std::vector<Operand> m_args;
             uint32_t m_address {0};
         };
 
-#define INSTRUCTION_CLASS(name, code, length, ...)                                          \
-    class name##_INSTRUCTION : public Instruction {                     \
-    private:                                                                                \
-        template <typename... Args>                                                         \
-        name##_INSTRUCTION(Args... args) : m_operands (std::make_tuple(args...)) {}                   \
-    public:                                                                                 \
-        using TupleType = std::tuple<__VA_ARGS__>;                                \
+        template <typename... Ts>
+        class InstructionDeriver: public Instruction {
+        public:
+            explicit InstructionDeriver(Ts... args) {
+                (m_args.emplace_back(std::forward<Ts>(args)), ...);
+            }
+            ~InstructionDeriver() override = default;
+            void print() const override{}
+        };
+
+
+#define INSTRUCTION_CLASS(name, code, length, ...)                                              \
+    class name##_INST : public InstructionDeriver<__VA_ARGS__> {                                \
+    protected:                                                                                  \
         template <typename... Args>                                                             \
-        static name##_INSTRUCTION* Create(Args... args) {                                       \
-        return new name##_INSTRUCTION(args...);                                             \
-    }                                                                                       \
-        ~name##_INSTRUCTION() override = default;                                               \
-        void print() const override{\
-            std::cout << "Instruction: " << #name << " Operands: ";\
-            std::apply([](auto&&... args) { ((std::cout << args << " "), ...); }, m_operands);\
-            std::cout << std::endl;\
-        }                          \
-        Opcode opcode() const override {return Opcode::name;}                                   \
-        int len() const override {return length;}                                               \
-        auto& get_operands() {return m_operands;}                                   \
-    private:                                                                                \
-        TupleType m_operands;                                                           \
+        name##_INST(Args... args) : InstructionDeriver(args...) {}                              \
+    public:                                                                                     \
+    template <typename... Args>                                                                 \
+    static name##_INST* Create(Args... args) {                                                  \
+        return new name##_INST(args...);                                                        \
+    }                                                                                           \
+    ~name##_INST() override = default;                                                          \
+                                                                                                \
+    Opcode opcode() const override {return Opcode::name;}                                       \
+    int len() const override {return length;}                                                   \
+    void print() const override {                                                               \
+        std::cout << "Opcode: " << +opcode() << " Args: ";                                      \
+        for (const auto& arg : m_args) {                                                        \
+            std::visit([](auto&& value) { std::cout << std::hex << +value << " "; }, arg);      \
+        }                                                                                       \
+        std::cout << " | "<< #name << "\n";                                                     \
+        }                                                                                       \
     };
-
-
-
         X_FOR_BYTECODES_WITH_TYPED_ARGS(INSTRUCTION_CLASS)
 
-
-
-
+#define DEFERRED_INSTRUCTION_CLASS(name, code, length, ...)                                             \
+    class DEFERRED_##name##_INST : public name##_INST {                                                 \
+    protected:                                                                                          \
+        template<typename... Args>                                                                      \
+        DEFERRED_##name##_INST(Label* label, Args... args) : name##_INST(args...), m_label(label) {}    \
+    public:                                                                                             \
+        template <typename... Args>                                                                     \
+        static DEFERRED_##name##_INST* Create(Label* label) {                                           \
+            return new DEFERRED_##name##_INST();                                                        \
+        }                                                                                               \
+        ~DEFERRED_##name##_INST() override = default;                                                   \
+        Instruction* manipulate_deferred_assignment() override {                                        \
+                                                                                   \
+            return nullptr;                                                                             \
+        }                                                                                               \
+    private:                                                                                            \
+        Label* m_label {}                                                                               \
+                                                                                                        \
+};
     }
 }

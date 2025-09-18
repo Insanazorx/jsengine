@@ -12,15 +12,15 @@ namespace js {
 
         using Bytecode = uint8_t;
 
-        class BytecodeStream {
+        class BytecodeProgram {
 
         private:
-            BytecodeStream() = default;
+            BytecodeProgram() = default;
         public:
-            static BytecodeStream* Create() {
-                return new BytecodeStream();
+            static BytecodeProgram* Create() {
+                return new BytecodeProgram();
             }
-            ~BytecodeStream() = default;
+            ~BytecodeProgram() = default;
 
             Bytecode at(size_t index) const {
                 if (index < m_bytecodes.size()) {
@@ -29,7 +29,12 @@ namespace js {
                 throw std::out_of_range("Index out of range");
             }
 
-            BytecodeStream& operator<<(Bytecode bytecode) {
+            BytecodeProgram& operator<<(const BytecodeProgram& other) {
+                m_bytecodes.insert(m_bytecodes.end(), other.m_bytecodes.begin(), other.m_bytecodes.end());
+                return *this;
+            }
+
+            BytecodeProgram& operator<<(Bytecode bytecode) {
                 m_bytecodes.push_back(bytecode);
                 return *this;
             }
@@ -58,19 +63,22 @@ namespace js {
                     whole_printing_buffer.push_back(printing_buffer);
                     i += arg_length;
                 }
-
+                int address = 0;
                 for (auto line : whole_printing_buffer) {
                     auto it = opcode_to_string_list.find(static_cast<uint8_t>(line[0]));
 
                     if (it == opcode_to_string_list.end())
                         VERIFY_NOT_REACHED();
 
-                    std::cout << "Opcode: ";
+
+
+                    std::cout << std::setw(6) << std::hex << address << ": ";
                     for (auto byte : line) {
                         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
                     }
-                    std::cout << "  | " << it->second;
+                    std::cout << " | " << it->second;
                     std::cout << std::endl;
+                    address += line.size();
                 }
 
             }
@@ -98,6 +106,13 @@ namespace js {
                 return m_bytecodes.end();
             }
 
+            bool empty() const {
+                return m_bytecodes.empty();
+            }
+
+            int size () const {
+                return m_bytecodes.size();
+            }
 
 
         private:

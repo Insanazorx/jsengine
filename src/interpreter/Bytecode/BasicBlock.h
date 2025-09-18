@@ -1,49 +1,75 @@
 #pragma once
 #include <vector>
 
+#include "BytecodeProgram.h"
 #include "Instruction.h"
 #include "Label.h"
 
 namespace js {
     namespace Interpreter {
         using Bytecode = uint8_t;
-        #define VARIADIC uint8_t, uint16_t, uint32_t, uint64_t
+
         class BasicBlock {
         private:
-            BasicBlock() = default;
+            explicit BasicBlock(Label* label) : m_label(label) {}
         public:
-            static BasicBlock* Create() {
-                return new BasicBlock();
+            static BasicBlock* Create(Label* label) {
+                return new BasicBlock(label);
             }
             ~BasicBlock() = default;
 
-            void make_next_block(BasicBlock* next) {m_next_block = next;}
             void make_true_branch(BasicBlock* true_branch) {m_true_branch = true_branch;}
             void make_false_branch(BasicBlock* false_branch) {m_false_branch = false_branch;}
 
-            void add_instruction(const Instruction& insn) {m_insn.push_back(insn);}
-            void set_start_address(int address) {m_start_address_absolute = address;}
-            void set_label(Label* label) {m_label = label;}
-
-            void relative_to_absolute_address_conversion(int base_address) {
-                m_start_address_absolute += base_address;
+            void add_instruction(Instruction* insn) {
+                m_insn.push_back(insn);
             }
 
+            Label* label() {return m_label;}
+
+
+            BytecodeProgram* bytecodes() const {return m_bytecodes;}
+
+
+            int calculate_size() const {
+                int size = 0;
+                for (auto insn : m_insn) {
+                    size += insn->len();
+                }
+                return size;
+            }
+
+            void merge(BasicBlock* other) {
+                for (auto insn : other->m_insn) {
+                    m_insn.push_back(insn);
+                }
+                other->m_insn.clear();
+                other->~BasicBlock();
+            }
+
+            void mangle_if_needed();
+
+            // Instructions as mangle points (jump e.g)
+            void add_insn_to_mangle(Instruction* insn) {m_insns_to_mangle.push_back(insn);}
+            const std::vector<Instruction*>& insns_to_mangle() const {return m_insns_to_mangle;}
+
+
             void parse_instructions();
-            void print() const;
+
+            void print_straight() const;
+            void print_detailed() const;
 
         private:
             Label* m_label {};
 
-            std::vector<Instruction> m_insn {};
-            std::vector<Bytecode> m_bytecodes {};
+            std::vector<Instruction*> m_insn {};
+            BytecodeProgram* m_bytecodes {BytecodeProgram::Create()};
 
-            BasicBlock* m_true_branch {nullptr};
-            BasicBlock* m_false_branch {nullptr};
-            BasicBlock* m_next_block {nullptr};
+            std::optional<BasicBlock*> m_true_branch {nullptr};
+            std::optional<BasicBlock*> m_false_branch {nullptr};
+            std::optional<BasicBlock*> m_unconditional_branch {nullptr};
 
-            int m_start_address_absolute {0};
-
+            std::vector<Instruction*> m_insns_to_mangle {};
 
         };//class BasicBlock
     }// namespace Interpreter
