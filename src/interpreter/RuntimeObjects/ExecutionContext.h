@@ -13,15 +13,15 @@ namespace js {
             ExecutionContext() = default;
             ~ExecutionContext() override = default;
 
-            void allocate_environment(Environment* env) {
+            void allocate_environment(LexicalEnvironment* env) {
                 m_outer_environment = m_current_environment;
                 m_current_environment = env;
             }
-            Environment* current_environment() { return m_current_environment; }
+            LexicalEnvironment* current_environment() { return m_current_environment; }
         private:
-            ThisBinding m_this_binding;
-            Environment* m_current_environment {nullptr};
-            Environment* m_outer_environment {nullptr};
+            ThisBinding* m_this_binding;
+            LexicalEnvironment* m_current_environment {nullptr};
+            LexicalEnvironment* m_outer_environment {nullptr};
             bool m_strict_mode {false};
 
 
