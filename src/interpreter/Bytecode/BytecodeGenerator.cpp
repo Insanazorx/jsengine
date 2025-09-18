@@ -1,6 +1,6 @@
 #pragma once
 #include "BytecodeGenerator.h"
-#include  "BytecodeStream.h"
+#include  "BytecodeProgram.h"
 
 namespace js {
     namespace Interpreter {

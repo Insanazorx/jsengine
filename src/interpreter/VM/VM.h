@@ -1,7 +1,7 @@
 #pragma once
 #include "ExecutionState.h"
 #include "Stack.h"
-#include "../Bytecode/BytecodeStream.h"
+#include "../Bytecode/BytecodeProgram.h"
 #include "../Bytecode/Bytecodes.h"
 
 namespace js {
@@ -12,7 +12,7 @@ namespace js {
             using Bytecode = uint8_t;
             using RegisterSet = std::array<Register*, 256>;
         public:
-            explicit VM(BytecodeStream* bytecodeStream): m_stream(bytecodeStream) {}
+            explicit VM(BytecodeProgram* bytecodeStream): m_program(bytecodeStream) {}
             ~VM() = default;
 
             void run();
@@ -43,15 +43,26 @@ namespace js {
             void initialize();
             
 
+            int allocate_on_heap(RuntimeObject* obj) {
+                m_heap.push_back(obj);
+                return m_heap.size() - 1;
+            }
+            RuntimeObject* heap_at(size_t index) {
+                if (index < m_heap.size()) {
+                    return m_heap[index];
+                }
+                return nullptr;
+            }
             X_FOR_BYTECODES_WITH_TYPED_ARGS(HANDLER_PROTOTYPE)
              
             
         private:
-            BytecodeStream* m_stream;
+            BytecodeProgram* m_program;
             RegisterSet m_registers {};
             ExecutionState* m_exec_state {new ExecutionState(*this)};
             Stack* m_stack {new Stack(*this)};
             bool m_running {false};
+            std::vector<RuntimeObject*> m_heap;
             //TODO: runtime heap for objects, functions, arrays, etc.
             //TODO: runtime objects
 

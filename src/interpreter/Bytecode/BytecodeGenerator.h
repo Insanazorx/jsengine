@@ -2,7 +2,7 @@
 
 #include "BasicBlock.h"
 #include "Bytecodes.h"
-#include "BytecodeStream.h"
+#include "BytecodeProgram.h"
 
 
 namespace js {
@@ -19,7 +19,6 @@ namespace js {
         class BytecodeGenerator {
             using Slot = uint8_t;
             using Address = uint32_t;
-            using Object_Descriptor = uint16_t;
             using Name = std::string;
         private:
             BytecodeGenerator() = default;
@@ -29,70 +28,42 @@ namespace js {
             }
 
             ~BytecodeGenerator() {
-                delete m_stream;
+                delete m_program;
             }
 
-            BytecodeStream* ExtractBytecodeStream() const {
-                return m_stream;
-            }
-            template <typename... Args> void BuildCommand(Opcode op, Args... args) {
-
-                auto streamer = [this](auto arg) {
-
-                    using T = decltype(arg);
-
-                    if constexpr (std::is_same_v<T, uint64_t>) {
-                        for (int i = 0; i < 8; ++i) {
-                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
-                            arg >>= 8;
-                        }
-                    }
-                    else if constexpr (std::is_same_v<T, uint32_t>) {
-                        for (int i = 0; i < 4; ++i) {
-                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
-                            arg >>= 8;
-                        }
-                    }
-                    else if constexpr (std::is_same_v<T, uint16_t>) {
-                        for (int i = 0; i < 2; ++i) {
-                            *m_stream << static_cast<Bytecode>(arg & 0xFF);
-                            arg >>= 8;
-                        }
-                    }
-                    else if constexpr (std::is_same_v<T, uint8_t>) {
-                        *m_stream << static_cast<Bytecode>(arg);
-                    }
-
-
-                };
-
-                *m_stream << op;
-
-                std::initializer_list<int>{(streamer(args), 0)...};
+            BytecodeProgram* ExtractBytecodeStream() const {
+                return m_program;
             }
 
-            void allocate_register(VM& vm);
+            void add_basic_block(BasicBlock* block) {
 
-            //TODO: Build Basic Blocks from ASTNode Objects
-            void build_basic_blocks();
+                BasicBlock* prev = nullptr;
+                if (!m_blocks.empty()) {
+                    prev = m_blocks.back();
+                }
+                block->label()->set_start_address(prev ? prev->label()->start_address() + prev->bytecodes()->size() : 0);
+                m_blocks.push_back(block);
 
-            //TODO: Convert BasicBlock relative jumps to absolute jumps
+
+            }
+
+            void update_jump_instructions();
+
+            Reg allocate_register(VM& vm);
+
+            void free_register(VM& vm, Reg reg);
+
+            void link_basic_blocks(BasicBlock* entry_block);
+
             void convert_relative_jumps_to_absolute();
 
-            //TODO: Convert BasicBlock relative addresses to absolute addresses
-            void convert_relative_addresses_to_absolute();
-
-
 
         private:
-            void emitBytecode (int opCode);
-            void emitSingleCommand();
+            BytecodeProgram* m_program {BytecodeProgram::Create()};
+            std::vector<BasicBlock*> m_blocks;
 
+            std::unordered_map<std::string, uint32_t> m_label_to_address_map;
 
-
-
-        private:
-            BytecodeStream* m_stream {BytecodeStream::Create()};
         }; // class BytecodeGenerator
     };  // namespace Interpreter
 }; // namespace js
