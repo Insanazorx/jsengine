@@ -4,7 +4,7 @@
 
 #include "../../frontend/debug.h"
 #include "VMObject.h"
-#include "../RuntimeObjects/Value.h"
+#include "../RuntimeObjects/JSValue.h"
 
 namespace js {
     namespace Interpreter {
@@ -42,20 +42,10 @@ namespace js {
             uint16_t val16() const {return static_cast<uint16_t>(m_value & 0xFFFF);}
             uint8_t val8() const {return static_cast<uint8_t>(m_value & 0xFF);}
 
-            void LoadValue(std::shared_ptr<Value> val) {
-                if (val->isBoolean()) {
-                    m_value = val->asBoolean() ? 1 : 0;
-                } else if (val->isNumber()) {
-                    m_value = static_cast<uint64_t>(val->asNumber());
-                } else if (val->isString()) {
-                    VERIFY_NOT_REACHED();
-                } else {
-                    m_value = 0;
-                }
-            }
             virtual uint8_t Id() const {return m_id;}
             virtual bool IsInUse() const {return in_use;}
             void SetInUse(bool use) {in_use = use;}
+
         protected:
             uint64_t m_value {0};
             uint8_t m_id {0};
@@ -77,7 +67,7 @@ namespace js {
             Accumulator(VM& vm) : Register(vm, 0) {};
             ~Accumulator() override = default;
 
-            bool LoadValue(Value& val) {
+            bool LoadValue(JSValue& val) {
 
             }
 

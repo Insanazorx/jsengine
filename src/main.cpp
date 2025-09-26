@@ -7,6 +7,7 @@
 #include "./ast/ASTNodeFactory.h"
 #include "interpreter/Bytecode/Instruction.h"
 #include "interpreter/VM/VM.h"
+#include <sys/mman.h>
 
 
 int main () {
@@ -45,8 +46,6 @@ int main () {
 
 #define BUILD_COMMAND(bb, x) bb->add_instruction(x);
 
-
-
     // let x = 10;
     // while
     // if (x > 5) {
@@ -54,52 +53,34 @@ int main () {
     // }
     // x *= 2
 
-    auto bb = BasicBlock::Create(Label::Create("start"));
-    BUILD_COMMAND(bb, LOAD_ACCUMULATOR_IMM8_INST::Create(p8(5)));
-    BUILD_COMMAND(bb, STORE_ACCUMULATOR_INST::Create(p8(1)));
-    BUILD_COMMAND(bb, XOR_INST::Create(p8(0)));
-    BUILD_COMMAND(bb, LOAD_ACCUMULATOR_IMM8_INST::Create(p8(10)));
-    BUILD_COMMAND(bb, STORE_ACCUMULATOR_INST::Create(p8(2))); //x
-    BUILD_COMMAND(bb, COMPARE_INST::Create(p8(1)));
 
-    auto bb_true= BasicBlock::Create(Label::Create("if_true"));
-    BUILD_COMMAND(bb_true, XOR_INST::Create(p8(0)));
-    BUILD_COMMAND(bb_true, LOAD_ACCUMULATOR_IMM8_INST::Create(p8(2)));
-    BUILD_COMMAND(bb_true, STORE_ACCUMULATOR_INST::Create(p8(3)));
-    BUILD_COMMAND(bb_true, LOAD_ACCUMULATOR_REG_INST::Create(p8(2)));
-    BUILD_COMMAND(bb_true, SUBTRACT_INST::Create(p8(3)));
-    BUILD_COMMAND(bb_true, STORE_ACCUMULATOR_INST::Create(p8(2)));
 
-    auto bb_false = BasicBlock::Create(Label::Create("if_false"));
-    BUILD_COMMAND(bb_false, XOR_INST::Create(p8(0)));
-    BUILD_COMMAND(bb_false, LOAD_ACCUMULATOR_REG_INST::Create(p8(2)));
-    BUILD_COMMAND(bb_false, MULTIPLY_INST::Create(p8(1)));
-    BUILD_COMMAND(bb_false, STORE_ACCUMULATOR_INST::Create(p8(2)));
-    BUILD_COMMAND(bb_false, DEBUG_PRINT_INST::Create(p8(2)));
-    BUILD_COMMAND(bb_false, HALT_INST::Create());
+    /*auto bb = BasicBlock::Create(Label::Create("start"));
 
-    BUILD_COMMAND(bb, LOAD_ACCUMULATOR_IMM64_INST::Create(p64(bb->calculate_size()+bb_true->calculate_size()+ 11)));
-    BUILD_COMMAND(bb, JUMP_IF_LTE_INST::Create(p8(0)));
 
     bb->label()->set_start_address(0);
-    bb_true->label()->set_start_address(bb->label()->start_address() + bb->calculate_size());
-    bb_false->label()->set_start_address(bb->label()->start_address() + bb->calculate_size() + bb_true->calculate_size());
 
     bb->parse_instructions();
-    bb_true->parse_instructions();
-    bb_false->parse_instructions();
 
     bb->print_detailed();
-    bb_true->print_detailed();
-    bb_false->print_detailed();
+
 
     auto bytecode_program = BytecodeProgram::Create();
     *bytecode_program << *bb->bytecodes();
-    *bytecode_program << *bb_true->bytecodes();
-    *bytecode_program << *bb_false->bytecodes();
 
     auto vm = VM(bytecode_program);
-    vm.run();
+    vm.run(); */
+
+
+
+
+
+
+    auto obj = JSObject::Create("MyObject");
+    obj->SetProperty(1, std::make_shared<JSValue>(42));
+    obj->SetProperty(2, std::make_shared<JSValue>("Hello, World!"));
+    auto a = JSValue(obj);
+    std::cout << std::hex << a.asObject() << std::endl;
 
 
 
@@ -115,19 +96,7 @@ int main () {
 
 
 
-
-
-    /*std::string expr("if (d-(a+b)*c) { return 1 + 2 + 3 ; }");
-    Lexer lexer(expr);
-    lexer.Scan();
-    for (auto token : lexer.Tokens())
-    DEBUG("Type of " << token.Lexeme << ": " << Lexer::StringifyTokenType(token));
-
-    auto& tokens = lexer.Tokens();
-    auto ctx = ParserContext::Create(Parser::Instance());
-    Parser::Initialize(tokens, ctx);
-    Parser::Instance()->ParseInGlobalContextFromTokens();
-    */
+    /*std::string expr("if (d-(a+b)*c) { return 1 + 2 + 3 ; }");*/
 
     return 0;
 

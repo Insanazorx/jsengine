@@ -4,7 +4,7 @@
 #include "Environment.h"
 #include "RuntimeObject.h"
 #include "ThisBinding.h"
-#include "Value.h"
+#include "JSValue.h"
 
 namespace js {
     namespace Interpreter {

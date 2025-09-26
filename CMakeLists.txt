@@ -25,7 +25,7 @@ add_executable(js src/main.cpp
         src/interpreter/VM/VM.h
         src/interpreter/RuntimeObjects/ExecutionContext.h
         src/interpreter/RuntimeObjects/RuntimeObject.h
-        src/interpreter/RuntimeObjects/Value.h
+        src/interpreter/RuntimeObjects/JSValue.h
         src/interpreter/RuntimeObjects/JSObject.h
         src/interpreter/Bytecode/BytecodeProgram.h
         src/interpreter/Bytecode/Label.h
@@ -47,7 +47,6 @@ add_executable(js src/main.cpp
         src/interpreter/Bytecode/ASTBytecodeGeneration.cpp
         src/interpreter/Bytecode/Instruction.h
         src/interpreter/Bytecode/BasicBlock.cpp
-        src/interpreter/Heap/Heap.h
 )
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)

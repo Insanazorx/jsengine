@@ -334,8 +334,8 @@ namespace js{
                 JSObject* obj = m_exec_state->current_context->current_environment()->get_object_by_descriptor(od);
                 VERIFY(obj,"Object not found in LOAD_NAMED_PROPERTY_HANDLER");
 
-                std::shared_ptr<Value> val = obj->GetPropertyByName(name_idx);
-                VERIFY(!val->isUndefined(),"Property not found in LOAD_NAMED_PROPERTY_HANDLER");
+                std::shared_ptr<JSValue> val = obj->GetPropertyByName(name_idx);
+                //VERIFY(!val->isUndefined(),"Property not found in LOAD_NAMED_PROPERTY_HANDLER");
 
                 m_exec_state->acc.LoadValue(*val);
 
@@ -355,8 +355,8 @@ namespace js{
                 int idx = m_registers[reg]->val16();
                 DEBUG("Index to load element from: " << idx);
 
-                std::shared_ptr<Value> val = obj->GetElementByIndex(idx);
-                VERIFY(!val->isUndefined(),"Element not found in LOAD_KEYED_PROPERTY_HANDLER");
+                std::shared_ptr<JSValue> val = obj->GetElementByIndex(idx);
+                //VERIFY(!val->isUndefined(),"Element not found in LOAD_KEYED_PROPERTY_HANDLER");
 
                 m_exec_state->acc.LoadValue(*val);
                 m_exec_state->flags.flags_union.flags.FLAG_IS_ACC_OD = false; // Accumulator now holds a direct value
@@ -366,7 +366,7 @@ namespace js{
             DECLARE_HANDLER(CREATE_OBJECT) {
                 DEBUG("ENTERED CREATE_OBJECT_HANDLER" );
 
-                JSObject* js_obj = JSObject::Create();
+                JSObject* js_obj = JSObject::Create("object");
                 VERIFY(js_obj,"Object creation failed in CREATE_OBJECT_HANDLER");
 
                 LexicalEnvironment* env=m_exec_state->current_context->current_environment();

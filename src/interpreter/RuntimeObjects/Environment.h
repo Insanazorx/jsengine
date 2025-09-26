@@ -4,7 +4,7 @@
 
 #include "JSObject.h"
 #include "RuntimeObject.h"
-#include "Value.h"
+#include "JSValue.h"
 
 namespace js {
     namespace Interpreter {
@@ -50,7 +50,7 @@ namespace js {
             uint16_t m_scope_depth {0};
             std::unordered_map <std::string, Name_Index> m_all_names;
             std::unordered_map<Name_Index, JSObject*> m_js_objects;
-            std::unordered_map<Name_Index, Value> m_all_values;
+            std::unordered_map<Name_Index, JSValue> m_all_values;
 
         };
 
