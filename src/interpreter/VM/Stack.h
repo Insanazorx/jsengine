@@ -5,10 +5,12 @@
 
 namespace js {
     namespace Interpreter {
-        class Stack : public VMObject{
+        class VM;
+
+        class Stack{
         public:
-            explicit Stack(VM& vm) : VMObject(vm) {}
-            ~Stack() override = default;
+            explicit Stack(VM& vm) {}
+            ~Stack() = default;
             void push(const RuntimeObject& obj) {
                 m_stack.push_back(obj);
             }

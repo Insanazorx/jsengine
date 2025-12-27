@@ -3,19 +3,18 @@
 #include <cstdlib>
 
 #include "../../frontend/debug.h"
-#include "VMObject.h"
 #include "../RuntimeObjects/JSValue.h"
 
 namespace js {
     namespace Interpreter {
-        class Register : public VMObject {
+        class Register {
         protected:
             //for allocating specific register
-            explicit Register(VM& vm,uint8_t reg_id) : VMObject(vm), m_id(reg_id), in_use(true) {
+            explicit Register(uint8_t reg_id) : m_id(reg_id), in_use(true) {
             }
 
             //for allocating random register
-            Register(VM& vm) : VMObject(vm), in_use(true) {
+            Register() : in_use(true) {
                 srand(time(NULL));
                 m_id = rand() % 256;
             }
@@ -26,11 +25,11 @@ namespace js {
 
             virtual ~Register() = default;
 
-            static Register* CreateWithRandomId(VM& vm) {
-                return new Register(vm);
+            static Register* CreateWithRandomId() {
+                return new Register();
             }
             static Register* CreateWithSpecificId(VM& vm, uint8_t reg_id) {
-                return new Register(vm, reg_id);
+                return new Register(reg_id);
             }
             void set8(uint64_t val) {m_value = val & 0xFF;}
             void set16(uint64_t val) {m_value = val & 0xFFFF;}
@@ -55,7 +54,7 @@ namespace js {
         };
         class ProgramCounter final : public Register {
         public:
-            ProgramCounter() : Register(vm, 0xFE) {};
+            ProgramCounter() : Register(0xFE) {};
             ~ProgramCounter() override = default;
 
             bool IsInUse() const override {return true;}
@@ -64,7 +63,7 @@ namespace js {
         };
         class Accumulator final : public Register {
         public:
-            Accumulator(VM& vm) : Register(vm, 0) {};
+            Accumulator() : Register(0) {};
             ~Accumulator() override = default;
 
             bool LoadValue(JSValue& val) {
@@ -90,7 +89,7 @@ namespace js {
 
         class LinkRegister final : public Register {
         public:
-            LinkRegister() : Register(vm, 0xFF) {};
+            LinkRegister() : Register(0xFF) {};
             ~LinkRegister() override = default;
             bool IsInUse() const override {return true;}
 

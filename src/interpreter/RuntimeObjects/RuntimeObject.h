@@ -7,13 +7,9 @@ namespace js {
         public:
             RuntimeObject() = default;
             virtual ~RuntimeObject() = default;
+            virtual bool IsRuntimeObject() const { return true; }
+            int id {0};
 
-
-            std::string& name() {
-                return m_name;
-            }
-        private:
-            std::string m_name {"Object"};
         };
     }; // namespace Interpreter
 }

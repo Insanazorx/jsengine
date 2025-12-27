@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
 
-#include "VMObject.h"
-
 namespace js {
     namespace Interpreter {
+        class VM;
+
         enum class Flag : uint8_t {
             F_ZERO = 1 << 0,
             F_EQUAL = 1 << 1,
@@ -16,9 +16,11 @@ namespace js {
             F_IS_ACC_OD = 1 << 7
         };
 
-        struct FlagSet : VMObject {
-            FlagSet(VM& vm) : VMObject(vm) {}
-            ~FlagSet() override = default;
+        struct FlagSet {
+            FlagSet() : flags_union() {
+            }
+
+            ~FlagSet() = default;
 
             union {
                 struct {

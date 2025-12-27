@@ -331,7 +331,7 @@ namespace js{
                 Name_Index od = m_exec_state->acc.val16();
                 VERIFY(od != 0,"Object descriptor not found in LOAD_NAMED_PROPERTY_HANDLER");
 
-                JSObject* obj = m_exec_state->current_context->current_environment()->get_object_by_descriptor(od);
+                JSObject* obj = m_exec_state->current_context->current_environment()->get_object_by_descriptor();
                 VERIFY(obj,"Object not found in LOAD_NAMED_PROPERTY_HANDLER");
 
                 std::shared_ptr<JSValue> val = obj->GetPropertyByName(name_idx);
@@ -349,7 +349,7 @@ namespace js{
                 auto od = m_exec_state->acc.val16();
                 VERIFY(od != 0,"Object descriptor not found in LOAD_KEYED_PROPERTY_HANDLER");
 
-                JSObject* obj = m_exec_state->current_context->current_environment()->get_object_by_descriptor(od);
+                JSObject* obj = m_exec_state->current_context->current_environment()->get_object_by_descriptor();
                 VERIFY(obj,"Object not found in LOAD_KEYED_PROPERTY_HANDLER");
 
                 int idx = m_registers[reg]->val16();
@@ -372,10 +372,10 @@ namespace js{
                 LexicalEnvironment* env=m_exec_state->current_context->current_environment();
                 VERIFY(env,"Current environment is null in CREATE_OBJECT_HANDLER");
 
-                Name_Index od  = env->create_object(js_obj, "Object_"+std::to_string(env->js_objects_count()));
-                DEBUG("Object created and stored in environment with name_index: " << od);
+                //Name_Index od  = env->create_object(js_obj, "Object_"+std::to_string(env->js_objects_count()));
+                //DEBUG("Object created and stored in environment with name_index: " << od);
 
-                m_exec_state->acc.set16(od);
+                //m_exec_state->acc.set16(od);
                 m_exec_state->flags.flags_union.flags.FLAG_IS_ACC_OD = true;
                 DEBUG("Accumulator now has value: " << m_exec_state->acc.val64());
 

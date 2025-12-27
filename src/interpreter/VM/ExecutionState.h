@@ -7,16 +7,16 @@
 namespace js::Interpreter {
     class ExecutionContext;
 
-    struct ExecutionState : VMObject{
-        explicit ExecutionState(VM& vm_ref) : VMObject(vm_ref) {}
-        ~ExecutionState() override = default;
+    struct ExecutionState{
+        explicit ExecutionState(VM& vm_ref) {}
+        ~ExecutionState() = default;
 
-        bool is_execution_state() const override { return true; }
+        bool is_execution_state() const { return true; }
 
-        Accumulator acc {Accumulator(vm)};
+        Accumulator acc {};
         ProgramCounter pc {};
         LinkRegister lr {};
-        FlagSet flags {FlagSet(vm)};
+        FlagSet flags {FlagSet()};
         ExecutionContext* current_context {new ExecutionContext()};
 
         void save_state_and_push_to_stack () {

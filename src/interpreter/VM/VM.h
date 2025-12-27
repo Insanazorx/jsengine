@@ -3,6 +3,7 @@
 #include "Stack.h"
 #include "../Bytecode/BytecodeProgram.h"
 #include "../Bytecode/Bytecodes.h"
+#include "../GarbageCollector/Heap.h"
 
 namespace js {
     namespace Interpreter {
@@ -43,16 +44,6 @@ namespace js {
             void initialize();
             
 
-            int allocate_on_heap(RuntimeObject* obj) {
-                m_heap.push_back(obj);
-                return m_heap.size() - 1;
-            }
-            RuntimeObject* heap_at(size_t index) {
-                if (index < m_heap.size()) {
-                    return m_heap[index];
-                }
-                return nullptr;
-            }
             X_FOR_BYTECODES_WITH_TYPED_ARGS(HANDLER_PROTOTYPE)
              
             
@@ -62,7 +53,7 @@ namespace js {
             ExecutionState* m_exec_state {new ExecutionState(*this)};
             Stack* m_stack {new Stack(*this)};
             bool m_running {false};
-            std::vector<RuntimeObject*> m_heap;
+            GarbageCollector::Heap m_heap;
             //TODO: runtime heap for objects, functions, arrays, etc.
             //TODO: runtime objects
 

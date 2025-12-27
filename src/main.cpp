@@ -76,14 +76,6 @@ int main () {
 
 
 
-    auto obj = JSObject::Create("MyObject");
-    obj->SetProperty(1, std::make_shared<JSValue>(42));
-    obj->SetProperty(2, std::make_shared<JSValue>("Hello, World!"));
-    auto a = JSValue(obj);
-    std::cout << std::hex << a.asObject() << std::endl;
-
-
-
 
 
 
