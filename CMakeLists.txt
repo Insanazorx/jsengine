@@ -8,19 +8,9 @@ find_package(nlohmann_json 3.11.3 REQUIRED)
 find_package(CURL REQUIRED)
 
 add_executable(js src/main.cpp
-        src/ast/AST.h
-        src/frontend/Lexer.h
-        src/frontend/Lexer.cpp
-        src/frontend/LexerTypes.h
-        src/frontend/debug.h
-        src/frontend/EnumTypes.h
+
         src/Util.h
         src/Visitor.h
-        src/SourceCode.h
-        src/SourceCode.cpp
-        src/frontend/ErrorOr.h
-        src/frontend/Forward.h
-        src/ast/ASTNodeFactory.h
         src/interpreter/Bytecode/BytecodeGenerator.h
         src/interpreter/VM/VM.h
         src/interpreter/RuntimeObjects/ExecutionContext.h
@@ -42,8 +32,6 @@ add_executable(js src/main.cpp
         src/interpreter/RuntimeObjects/BuiltinFunctions/DebugPrint.h
         src/interpreter/RuntimeObjects/JSFunction.h
         src/interpreter/Bytecode/BasicBlock.h
-        src/ast/ASTJsonDump.cpp
-        src/interpreter/Bytecode/ASTBytecodeGeneration.cpp
         src/interpreter/Bytecode/Instruction.h
         src/interpreter/Bytecode/BasicBlock.cpp
         src/interpreter/GarbageCollector/Cell.h
@@ -51,6 +39,7 @@ add_executable(js src/main.cpp
         src/interpreter/GarbageCollector/Heap.h
         src/interpreter/GarbageCollector/Region.h
         src/interpreter/GarbageCollector/Forward.h
+        src/debug.h
 )
 
 target_link_libraries(js PRIVATE nlohmann_json::nlohmann_json)

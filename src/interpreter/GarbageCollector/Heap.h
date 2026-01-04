@@ -3,7 +3,7 @@
 
 #include "Cell.h"
 #include "Region.h"
-#include "../../frontend/debug.h"
+#include "../../debug.h"
 
 
 namespace js::GarbageCollector {

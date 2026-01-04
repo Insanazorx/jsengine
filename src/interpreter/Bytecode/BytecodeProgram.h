@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Bytecodes.h"
-#include "../../frontend/debug.h"
+#include "../../debug.h"
 
 
 namespace js {

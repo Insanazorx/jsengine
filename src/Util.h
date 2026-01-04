@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <coroutine>
-#include "frontend/debug.h"
+#include "debug.h"
 
 namespace js {
     using namespace std;

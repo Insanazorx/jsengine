@@ -1,7 +1,7 @@
 #pragma once
 #include "VM.h"
 
-#include "../../frontend/debug.h"
+#include "../../debug.h"
 #include "../Bytecode/BytecodeGenerator.h"
 #include "Register.h"
 #include "../RuntimeObjects/JSObject.h"

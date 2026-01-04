@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include "../../frontend/debug.h"
+#include "../../debug.h"
 #include "../RuntimeObjects/JSValue.h"
 
 namespace js {
